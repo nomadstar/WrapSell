@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  ganache:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8545:8545"
+    volumes:
+      - ./ganache:/data
+    working_dir: /data
+    environment:
+      - NETWORK_ID=5777
+      - DEFAULT_BALANCE_ETHER=1000000000000000000000
+      - BLOCK_TIME=1
+      - GAS_LIMIT=8000000
+      - FORK_URL=http://localhost:8545
+      - FORK_BLOCK_NUMBER=0
+  
