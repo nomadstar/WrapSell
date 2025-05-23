@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -8,12 +8,38 @@ contract SimpleNFT is ERC721URIStorage, Ownable {
     uint256 private _tokenIds;
     address public branchBurner;
 
-    constructor(address _burner) ERC721("SimpleNFT", "SNFT") {
-        branchBurner = _burner;
+    struct CardData {
+        string imgName;
+        string cardSerial;
+        string cardScanSerial;
+        string description;
+        string tcgName;
+        string tcgEdition;
+        string propertiesJson;
+        uint8 condition;
+        string imageUrl; // Link de la imagen
+    }
+
+    mapping(uint256 => CardData) public cardData;
+
+    constructor(address _branchBurner) 
+        ERC721("SimpleNFT", "SNFT") 
+        Ownable(_branchBurner) 
+    {
+        branchBurner = _branchBurner;
+    }
+
+    modifier onlyBranchBurner() {
+        require(msg.sender == branchBurner, "Not authorized branch");
+        _;
+    }
+
+    function setBranchBurner(address _branchBurner) public onlyOwner {
+        branchBurner = _branchBurner;
     }
 
     function createNFT(
-        address recipient,
+        address to,
         string memory imgName,
         string memory cardSerial,
         string memory cardScanSerial,
@@ -24,19 +50,44 @@ contract SimpleNFT is ERC721URIStorage, Ownable {
         uint8 condition,
         string memory imageUrl
     ) public onlyOwner returns (uint256) {
-        _tokenIds++;
-        uint256 newItemId = _tokenIds;
-        _mint(recipient, newItemId);
-        _setTokenURI(newItemId, imageUrl);
-        return newItemId;
+        require(to != address(0), "Destino nulo");
+        uint256 newTokenId = _tokenIds;
+        _mint(to, newTokenId);
+
+        cardData[newTokenId] = CardData(
+            imgName,
+            cardSerial,
+            cardScanSerial,
+            description,
+            tcgName,
+            tcgEdition,
+            propertiesJson,
+            condition,
+            imageUrl
+        );
+
+        _tokenIds += 1;
+        return newTokenId;
+    }
+
+    function burn(uint256 tokenId) public onlyBranchBurner {
+        _burn(tokenId);
+        delete cardData[tokenId];
+    }
+
+    function _baseURI() internal pure override returns (string memory) {
+        return "";
     }
 
     function getTokenIds() public view returns (uint256) {
         return _tokenIds;
     }
 
-    function burn(uint256 tokenId) public {
-        require(msg.sender == owner() || msg.sender == branchBurner, "No autorizado");
-        _burn(tokenId);
+    function getImage(uint256 tokenId) public view returns (string memory) {
+        return cardData[tokenId].imageUrl;
+    }
+
+    function getOwner() public view returns (address) {
+        return owner();
     }
 }

@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Instala dependencias del sistema
 RUN apt-get update && \
-    apt-get install -y python python3-pip curl git build-essential \
+    apt-get install -y python3 python3-pip curl git build-essential \
     software-properties-common ffmpeg libsm6 libxext6 && \
     rm -rf /var/lib/apt/lists/*
 

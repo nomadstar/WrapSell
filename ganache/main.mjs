@@ -33,7 +33,10 @@ contract SimpleNFT is ERC721URIStorage, Ownable {
 
     mapping(uint256 => CardData) public cardData;
 
-    constructor(address _branchBurner) ERC721("SimpleNFT", "SNFT") {
+    constructor(address _branchBurner) 
+        ERC721("SimpleNFT", "SNFT") 
+        Ownable(_branchBurner) 
+    {
         branchBurner = _branchBurner;
     }
 

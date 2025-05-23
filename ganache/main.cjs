@@ -6,7 +6,7 @@ const QRCode = require('qrcode');
 const fs = require('fs-extra');
 const path = require('path');
 
-const web3 = new Web3('http://127.0.0.1:8545');
+const web3 = new Web3('http://127.0.0.1:8545'); // Ganache local
 
 async function compileContract() {
     const source = await fs.readFile('SimpleNFT.sol', 'utf8');
@@ -14,9 +14,7 @@ async function compileContract() {
     const input = {
         language: 'Solidity',
         sources: {
-            'SimpleNFT.sol': {
-                content: source
-            }
+            'SimpleNFT.sol': { content: source }
         },
         settings: {
             outputSelection: {
@@ -27,17 +25,28 @@ async function compileContract() {
         }
     };
 
-    const output = JSON.parse(solc.compile(JSON.stringify(input)));
+    const output = JSON.parse(
+        solc.compile(
+            JSON.stringify(input),
+            {
+                import: (pathImport) => {
+                    if (pathImport.startsWith('@openzeppelin/')) {
+                        const fullPath = require.resolve(pathImport, { paths: [process.cwd() + '/node_modules'] });
+                        return { contents: fs.readFileSync(fullPath, 'utf8') };
+                    }
+                    if (fs.existsSync(pathImport)) {
+                        return { contents: fs.readFileSync(pathImport, 'utf8') };
+                    }
+                    return { error: 'Archivo no encontrado: ' + pathImport };
+                }
+            }
+        )
+    );
 
     if (output.errors) {
-        output.errors.forEach(err => {
-            console.error(err.formattedMessage);
-        });
-
+        output.errors.forEach(err => console.error(err.formattedMessage));
         const hasErrors = output.errors.some(e => e.severity === 'error');
-        if (hasErrors) {
-            throw new Error('Errores al compilar el contrato Solidity');
-        }
+        if (hasErrors) throw new Error('Errores al compilar el contrato Solidity');
     }
 
     const contract = output.contracts['SimpleNFT.sol']['SimpleNFT'];
@@ -55,12 +64,20 @@ async function run() {
 
     const { abi, bytecode } = await compileContract();
     const accounts = await web3.eth.getAccounts();
+
     const deployer = accounts[0];
+
+    const balanceEth = web3.utils.fromWei(await web3.eth.getBalance(deployer), 'ether');
+    console.log(`Saldo de la cuenta deployer: ${balanceEth} ETH`);
+
+    if (parseFloat(balanceEth) < 1) {
+        throw new Error('La cuenta deployer no tiene suficiente ETH. Asegúrate de que Ganache esté corriendo.');
+    }
 
     const SimpleNFT = new web3.eth.Contract(abi);
     const contractInstance = await SimpleNFT.deploy({
         data: '0x' + bytecode,
-        arguments: [deployer] // Este será el branchBurner
+        arguments: [deployer]
     }).send({
         from: deployer,
         gas: 5000000
@@ -70,51 +87,64 @@ async function run() {
 
     const imageUrl = 'file://' + path.resolve(imagePath);
 
-    const tx = await contractInstance.methods.createNFT(
-        deployer,
-        'captured_image.jpg', // imgName
-        'SERIAL123',          // cardSerial
-        'SCAN123',            // cardScanSerial
-        'NFT generado desde imagen capturada',
-        'DemoTCG',
-        'Primera',
-        '{"rarity":"common"}',
-        10,                   // condition
-        imageUrl
-    ).send({ from: deployer, gas: 500000 });
+    try {
+        const amount = BigInt(10); // o usa "10" como string si tu contrato espera string
 
-    const tokenId = await contractInstance.methods.getTokenIds().call();
-    console.log(`✅ NFT creado con TokenId: ${tokenId}`);
-    console.log(`📷 Imagen: ${imageUrl}`);
+        await contractInstance.methods.createNFT(
+            deployer,
+            'captured_image.jpg',
+            'SERIAL123',
+            'SCAN123',
+            'NFT generado desde imagen capturada',
+            'DemoTCG',
+            'Primera',
+            '{"rarity":"common"}',
+            amount.toString(), // ✅ Conversión explícita a string
+            imageUrl
+        ).send({ from: deployer, gas: 500000 });
 
-    const nftData = {
-        contract: contractInstance.options.address,
-        tokenId,
-        imageUrl
-    };
+        console.log('✅ NFT creado con éxito');
 
-    const qrPath = `nft_${tokenId}_qr.png`;
-    await QRCode.toFile(qrPath, JSON.stringify(nftData), {
-        color: {
-            dark: '#000',
-            light: '#FFF'
-        }
-    });
+        const tokenIdBigInt = BigInt(await contractInstance.methods.getTokenIds().call()) - 1n;
+        const tokenId = tokenIdBigInt.toString(); // ✅ Para mostrar, QR, etc.
 
-    console.log(`🔳 QR generado y guardado en: ${qrPath}`);
+        console.log(`✅ NFT creado con TokenId: ${tokenId}`);
+        console.log(`📷 Imagen: ${imageUrl}`);
 
-    // Espera 2 minutos y luego quema el NFT
-    setTimeout(async () => {
-        try {
-            await contractInstance.methods.burn(tokenId).send({
-                from: deployer,
-                gas: 200000
-            });
-            console.log(`🔥 NFT con TokenId ${tokenId} destruido después de 2 minutos.`);
-        } catch (err) {
-            console.error('❌ Error al destruir el NFT:', err.message);
-        }
-    }, 2 * 60 * 1000);
+        const nftData = {
+            contract: contractInstance.options.address,
+            tokenId,
+            imageUrl
+        };
+
+        const qrPath = `nft_${tokenId}_qr.png`;
+        await QRCode.toFile(qrPath, JSON.stringify(nftData), {
+            color: {
+                dark: '#000',
+                light: '#FFF'
+            }
+        });
+
+        console.log(`🔳 QR generado y guardado en: ${qrPath}`);
+
+        setTimeout(async () => {
+            try {
+                await contractInstance.methods.burn(tokenId).send({
+                    from: deployer,
+                    gas: 200000
+                });
+                console.log(`🔥 NFT con TokenId ${tokenId} destruido después de 2 minutos.`);
+            } catch (err) {
+                console.error('❌ Error al destruir el NFT:', err.message);
+            }
+        }, 2 * 60 * 1000);
+    } catch (err) {
+        console.error('❌ Error al crear NFT:', err.message);
+    }
+
+    const owner = await contractInstance.methods.getOwner().call();
+    console.log('Owner del contrato:', owner);
+    console.log('Deployer:', deployer);
 }
 
 run().catch(err => {
