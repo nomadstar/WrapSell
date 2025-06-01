@@ -35,4 +35,4 @@ COPY --from=builder /app/.env ./.env
 EXPOSE 3000
 
 # Comando para iniciar Next.js en modo producción
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev"]
