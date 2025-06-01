@@ -1,0 +1,40 @@
+{
+  "name": "wrapsell",
+  "version": "0.1.0",
+  "private": true,
+  "description": "- [Tutorial en Video](https://youtu.be/lxTGqXh7LiA?si=AO12ENhMm3HTC7Qp) - Guía para configurar Reown en un proyecto (nota: este proyecto ya viene con Reown configurado)\r - [Reown Platform](https://reown.com/) - Plataforma principal\r - [Documentación de Reown](https://docs.reown.com/overview) - Documentación oficial\r - [Wagmi Core API](https://wagmi.sh/core/api/actions/readContract) - Documentación de Wagmi para interacción con contratos",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@reown/appkit": "^1.7.7",
+    "@reown/appkit-adapter-ethers": "^1.7.7",
+    "@reown/appkit-adapter-wagmi": "^1.7.7",
+    "@tanstack/react-query": "^5.79.0",
+    "ethers": "^6.14.3",
+    "next": "15.3.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "viem": "^2.30.5",
+    "wagmi": "^2.15.4"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.2",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

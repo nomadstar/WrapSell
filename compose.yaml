@@ -1,20 +1,36 @@
 version: '3.8'
 
 services:
-  ganache:
-    build:
-      context: .
-      dockerfile: dockerfile
-    ports:
-      - "8545:8545"
-    volumes:
-      - ./ganache:/data
-    working_dir: /data
-    environment:
-      - NETWORK_ID=5777
-      - DEFAULT_BALANCE_ETHER=1000000000000000000000
-      - BLOCK_TIME=1
-      - GAS_LIMIT=8000000
-      - FORK_URL=http://localhost:8545
-      - FORK_BLOCK_NUMBER=0
+  # ganache:
+  #   build:
+  #     context: .
+  #     dockerfile: dockerfile
+  #   ports:
+  #     - "8545:8545"
+  #   volumes:
+  #     - ./ganache:/data
+  #   working_dir: /data
+  #   environment:
+  #     - NETWORK_ID=5777
+  #     - DEFAULT_BALANCE_ETHER=1000000000000000000000
+  #     - BLOCK_TIME=1
+  #     - GAS_LIMIT=8000000
+  #     - FORK_URL=http://localhost:8545
+  #     - FORK_BLOCK_NUMBER=0
   
+  nextjs:
+    image: node:latest
+    container_name: nextjs_app
+    working_dir: /app
+    volumes:
+      - ./frontend:/app/frontend
+      - ./contract:/app/contract
+      - .env:/app/.env
+      - ./backend:/app/backend
+    tty: true
+    stdin_open: true
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
