@@ -1,0 +1,21 @@
+{
+  "name": "wrapsell",
+  "version": "1.0.0",
+  "description": "Este repositorio sirve como base para proyectos de hackathon web3, desarrollado para el ramo BLOCKCHAIN Y ALGORITMOS DESCENTRALIZADOS (CIT3358_CA01) de la Universidad Diego Portales.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nomadstar/WrapSell.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/nomadstar/WrapSell/issues"
+  },
+  "homepage": "https://github.com/nomadstar/WrapSell#readme"
+}

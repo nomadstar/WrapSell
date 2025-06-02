@@ -30,6 +30,7 @@ Para iniciar el desarrollo local:
 
 ```bash
 cd frontend
+npm init
 npm install
 npm run dev
 ```
