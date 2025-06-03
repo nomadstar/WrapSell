@@ -24,7 +24,7 @@ services:
     working_dir: /app
     volumes:
       - ./getter:/app
-    command: python extraer.py
+    command: python app.py
 
   db:
     image: postgres:latest
