@@ -17,7 +17,28 @@ services:
   #     - GAS_LIMIT=8000000
   #     - FORK_URL=http://localhost:8545
   #     - FORK_BLOCK_NUMBER=0
-  
+
+  getter:
+    image: python:latest
+    container_name: getter_service
+    working_dir: /app
+    volumes:
+      - ./getter:/app
+    command: python extraer.py
+
+  db:
+    image: postgres:latest
+    container_name: postgres_db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    
+
   nextjs:
     build:
       context: ./frontend
