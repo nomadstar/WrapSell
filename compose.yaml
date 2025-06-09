@@ -18,6 +18,8 @@ services:
   #     - FORK_URL=http://localhost:8545
   #     - FORK_BLOCK_NUMBER=0
 
+  
+
   getter:
     image: python:latest
     container_name: getter_service

@@ -1,93 +1,158 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.26;
 
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+interface IStablecoin {
+    function transfer(address recipient, uint256 amount) external returns (bool);
+    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
+    function balanceOf(address account) external view returns (uint256);
+    function approve(address spender, uint256 amount) external returns (bool);
+}
 
-contract SimpleNFT is ERC721URIStorage, Ownable {
-    uint256 private _tokenIds;
-    address public branchBurner;
+// Estructura para la información de cada carta
+struct Card {
+    string name;
+    string number;
+    string edition;
+    uint256 price;
+    string url;
+}
 
-    struct CardData {
-        string imgName;
-        string cardSerial;
-        string cardScanSerial;
-        string description;
-        string tcgName;
-        string tcgEdition;
-        string propertiesJson;
-        uint8 condition;
-        string imageUrl; // Link de la imagen
+contract Wrapsell is IStablecoin {
+    IStablecoin public stablecoin;
+
+    mapping(address => uint256) public balances;
+
+    // Variables solicitadas
+    address public owner;
+    uint256 public feePercent;
+    uint256 public totalDeposited;
+    uint256 public totalWithdrawn;
+
+    // Colección de cartas
+    Card[] public cards;
+
+    // Máximo minteable
+    uint256 public maxMintable;
+
+    // Stablecoin variables
+    string public name = "WrapSell Stablecoin";
+    string public symbol = "WSS";
+    uint8 public decimals = 18;
+    uint256 public totalSupply;
+
+    mapping(address => uint256) private _stableBalances;
+    mapping(address => mapping(address => uint256)) private _allowances;
+
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+
+    constructor(
+        address _stablecoin,
+        Card[] memory _cards
+    ) {
+        stablecoin = IStablecoin(_stablecoin);
+        owner = msg.sender;
+        feePercent = 0;
+        totalDeposited = 0;
+        totalWithdrawn = 0;
+
+        uint256 totalValue = 0;
+        // Copiar las cartas a la colección y calcular el valor total
+        for (uint256 i = 0; i < _cards.length; i++) {
+            cards.push(_cards[i]);
+            totalValue += _cards[i].price;
+        }
+        // El máximo minteable es 1/4 del valor total de las cartas
+        maxMintable = totalValue / 4;
     }
 
-    mapping(uint256 => CardData) public cardData;
+    // --- Stablecoin functions ---
 
-    constructor(address _branchBurner) 
-        ERC721("SimpleNFT", "SNFT") 
-        Ownable(_branchBurner) 
-    {
-        branchBurner = _branchBurner;
+    function balanceOf(address account) public view override returns (uint256) {
+        return _stableBalances[account];
     }
 
-    modifier onlyBranchBurner() {
-        require(msg.sender == branchBurner, "Not authorized branch");
-        _;
+    function transfer(address recipient, uint256 amount) public override returns (bool) {
+        _transfer(msg.sender, recipient, amount);
+        return true;
     }
 
-    function setBranchBurner(address _branchBurner) public onlyOwner {
-        branchBurner = _branchBurner;
+    function approve(address spender, uint256 amount) public override returns (bool) {
+        _approve(msg.sender, spender, amount);
+        return true;
     }
 
-    function createNFT(
-        address to,
-        string memory imgName,
-        string memory cardSerial,
-        string memory cardScanSerial,
-        string memory description,
-        string memory tcgName,
-        string memory tcgEdition,
-        string memory propertiesJson,
-        uint8 condition,
-        string memory imageUrl
-    ) public onlyOwner returns (uint256) {
-        require(to != address(0), "Destino nulo");
-        uint256 newTokenId = _tokenIds;
-        _mint(to, newTokenId);
-
-        cardData[newTokenId] = CardData(
-            imgName,
-            cardSerial,
-            cardScanSerial,
-            description,
-            tcgName,
-            tcgEdition,
-            propertiesJson,
-            condition,
-            imageUrl
-        );
-
-        _tokenIds += 1;
-        return newTokenId;
+    function allowance(address owner_, address spender) public view returns (uint256) {
+        return _allowances[owner_][spender];
     }
 
-    function burn(uint256 tokenId) public onlyBranchBurner {
-        _burn(tokenId);
-        delete cardData[tokenId];
+    function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
+        uint256 currentAllowance = _allowances[sender][msg.sender];
+        require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
+        _transfer(sender, recipient, amount);
+        _approve(sender, msg.sender, currentAllowance - amount);
+        return true;
     }
 
-    function _baseURI() internal pure override returns (string memory) {
-        return "";
+    function mint(address to, uint256 amount) public {
+        require(msg.sender == owner, "Only owner can mint");
+        require(totalSupply + amount <= maxMintable, "Exceeds max mintable");
+        totalSupply += amount;
+        _stableBalances[to] += amount;
+        emit Transfer(address(0), to, amount);
     }
 
-    function getTokenIds() public view returns (uint256) {
-        return _tokenIds;
+    function burn(uint256 amount) public {
+        require(_stableBalances[msg.sender] >= amount, "Insufficient balance");
+        totalSupply -= amount;
+        _stableBalances[msg.sender] -= amount;
+        emit Transfer(msg.sender, address(0), amount);
     }
 
-    function getImage(uint256 tokenId) public view returns (string memory) {
-        return cardData[tokenId].imageUrl;
+    function _transfer(address from, address to, uint256 amount) internal {
+        require(from != address(0) && to != address(0), "Zero address");
+        require(_stableBalances[from] >= amount, "Insufficient balance");
+        _stableBalances[from] -= amount;
+        _stableBalances[to] += amount;
+        emit Transfer(from, to, amount);
     }
 
-    function getOwner() public view returns (address) {
-        return owner();
+    function _approve(address owner_, address spender, uint256 amount) internal {
+        require(owner_ != address(0) && spender != address(0), "Zero address");
+        _allowances[owner_][spender] = amount;
+        emit Approval(owner_, spender, amount);
+    }
+
+    // --- WrapSell functions ---
+
+    function deposit(uint256 amount) external {
+        require(stablecoin.transferFrom(msg.sender, address(this), amount), "Transfer failed");
+        balances[msg.sender] += amount;
+        totalDeposited += amount;
+    }
+
+    function withdraw(uint256 amount) external {
+        require(balances[msg.sender] >= amount, "Insufficient balance");
+        balances[msg.sender] -= amount;
+        require(stablecoin.transfer(msg.sender, amount), "Transfer failed");
+        totalWithdrawn += amount;
+    }
+
+    // Obtener el número total de cartas en la colección
+    function getCardsCount() external view returns (uint256) {
+        return cards.length;
+    }
+
+    // Obtener información de una carta específica
+    function getCard(uint256 index) external view returns (
+        string memory cardName,
+        string memory number,
+        string memory edition,
+        uint256 price,
+        string memory url
+    ) {
+        require(index < cards.length, "Card does not exist");
+        Card storage card = cards[index];
+        return (card.name, card.number, card.edition, card.price, card.url);
     }
 }
