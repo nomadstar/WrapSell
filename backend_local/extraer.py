@@ -1,16 +1,15 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-import re # Importamos re para trabajar con expresiones regulares
 
 def format_for_url(text):
     """Convierte un texto a formato para URL (minúsculas, espacios a guiones)."""
     return text.lower().replace(' ', '-')
 
-def extract_card_data(edition_name, card_name_input, card_number_input):
+def extract_ungraded_card_data(edition_name, card_name_input, card_number_input):
     """
-    Extrae la información de una carta de Pokémon TCG desde pricecharting.com,
-    construyendo la URL a partir de los detalles de la carta.
+    Extrae la información y el precio Ungraded de una carta de Pokémon TCG
+    desde pricecharting.com.
 
     Args:
         edition_name (str): El nombre de la edición (ej: "Pokemon Ultra Prism").
@@ -18,7 +17,7 @@ def extract_card_data(edition_name, card_name_input, card_number_input):
         card_number_input (str): El número de la carta (ej: "41").
 
     Returns:
-        dict: Un diccionario con la información de la carta y sus precios,
+        dict: Un diccionario con la información y el precio Ungraded de la carta,
               o None si ocurre un error.
     """
     headers = {
@@ -29,15 +28,14 @@ def extract_card_data(edition_name, card_name_input, card_number_input):
     try:
         formatted_edition = format_for_url(edition_name)
         formatted_card_name = format_for_url(card_name_input)
-        
         card_number_str = str(card_number_input)
-
         url = f"https://www.pricecharting.com/game/{formatted_edition}/{formatted_card_name}-{card_number_str}"
         print(f"URL construida: {url}")
     except Exception as e:
         print(f"Error al construir la URL: {e}")
         return None
 
+    # --- 2. Realizar la petición y parsear el HTML ---
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()  # Lanza un error para respuestas HTTP malas (4xx o 5xx)
@@ -53,69 +51,44 @@ def extract_card_data(edition_name, card_name_input, card_number_input):
 
     soup = BeautifulSoup(response.content, 'html.parser')
 
-    # --- 2. Información de la carta (ya la tenemos de los parámetros) ---
-    edition = edition_name
-    card_name = card_name_input
-    card_number = card_number_input
-
-
-    # --- 3. Extraer precios de la tabla ---
-    price_data = {}
+    # --- 3. Extraer el precio Ungraded ---
+    ungraded_price = "N/A"
     try:
         price_table = soup.find('table', id='price_data')
         if not price_table:
             print("Error: No se encontró la tabla de precios (id='price_data').")
             return None
-        
-        target_td_ids = {
-            "Ungraded": "used_price",
-            "Grade 7": "complete_price",
-            "Grade 8": "new_price",
-            "Grade 9": "graded_price",
-            "Grade 9.5": "box_only_price",
-            "PSA 10": "manual_only_price"
-        }
 
-        first_data_row = price_table.find('tbody').find('tr')
-        if not first_data_row:
-            print("Error: No se encontró la primera fila de datos en la tabla de precios.")
-            return None
-
-        for grade_name, td_id in target_td_ids.items():
-            price_cell = first_data_row.find('td', id=td_id)
-            if price_cell:
-                price_span = price_cell.find('span', class_='price')
-                if price_span:
-                    price_text = price_span.text.strip()
-                    price_data[grade_name] = price_text if price_text and price_text != '-' else "N/A"
-                else:
-                    price_data[grade_name] = "N/A (span.price no encontrado)"
+        # Buscamos directamente la celda del precio 'Ungraded' que tiene el id 'used_price'
+        price_cell = price_table.find('td', id='used_price')
+        if price_cell:
+            price_span = price_cell.find('span', class_='price')
+            if price_span:
+                price_text = price_span.text.strip()
+                ungraded_price = price_text if price_text and price_text != '-' else "N/A"
             else:
-                price_data[grade_name] = f"N/A (td con id '{td_id}' no encontrado)"
-                
+                ungraded_price = "N/A (span.price no encontrado)"
+        else:
+            ungraded_price = "N/A (td con id 'used_price' no encontrado)"
+            
     except Exception as e:
-        print(f"Error al extraer los precios de la tabla: {e}")
-        # Si hay un error aquí, pero tenemos los datos básicos, podríamos devolverlos.
-        # Por ahora, si no podemos obtener precios, consideramos que la extracción falló.
-        return None # Opcionalmente, podrías devolver la información parcial.
+        print(f"Error al extraer el precio de la tabla: {e}")
+        return None
 
-    card_info = {
-        "edicion_carta": edition,
-        "nombre_carta": card_name.title(), # Capitalizamos el nombre
-        "numero_carta": str(card_number), # Aseguramos que sea string para JSON
-        "url_extraccion": url,
-        "precios": price_data
+    # --- 4. Construir el objeto JSON de salida ---
+    card_data_output = {
+        "card_name": card_name_input.title(),
+        "card_number": str(card_number_input),
+        "card_edition": edition_name,
+        "price": ungraded_price,
+        "url": url
     }
 
-    return card_info
+    return card_data_output
 
 def save_to_json(data, filename="card_data.json"):
     """
-    Guarda un diccionario en un archivo JSON.
-
-    Args:
-        data (dict): El diccionario a guardar.
-        filename (str): El nombre del archivo JSON de salida.
+    Guarda los datos (un diccionario) en un archivo JSON.
     """
     try:
         with open(filename, 'w', encoding='utf-8') as f:
@@ -135,26 +108,18 @@ if __name__ == "__main__":
     input_card_number = input("Ingresa el número de la carta (ej: 41): ")
 
     print(f"\nExtrayendo datos para: {input_card_name} #{input_card_number} de la edición {input_edition}")
-    data = extract_card_data(input_edition, input_card_name, input_card_number)
+    
+    # La función ahora devuelve un único diccionario con el precio Ungraded
+    card_data = extract_ungraded_card_data(input_edition, input_card_name, input_card_number)
 
-    if data:
+    if card_data:
         print("\n--- Datos Extraídos ---")
-        print(json.dumps(data, indent=2))
+        print(json.dumps(card_data, indent=2))
         print("-----------------------\n")
         
-        # Generar un nombre de archivo dinámico para evitar sobrescribir
+        # Generar un nombre de archivo dinámico
         safe_card_name = format_for_url(input_card_name)
         json_filename = f"{safe_card_name}_{input_card_number}_data.json"
-        save_to_json(data, json_filename)
-
-        # Ejemplo con otra carta para probar (sin input de usuario)
-        # print("\n--- Ejemplo 2: Charizard Base Set ---")
-        # data_2 = extract_card_data("Pokemon Base Set", "Charizard", "4")
-        # if data_2:
-        #     print("\n--- Datos Extraídos (Charizard) ---")
-        #     print(json.dumps(data_2, indent=2))
-        #     print("-----------------------------------\n")
-        #     save_to_json(data_2, "charizard_4_data.json")
+        save_to_json(card_data, json_filename)
     else:
         print(f"No se pudieron extraer los datos para {input_card_name} #{input_card_number}.")
-
