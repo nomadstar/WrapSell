@@ -107,6 +107,12 @@ if __name__ == "__main__":
     input_card_name = input("Ingresa el nombre de la carta (ej: Frost Rotom): ")
     input_card_number = input("Ingresa el número de la carta (ej: 41): ")
 
+    if input_edition == "" or input_card_name == "" or input_card_number == "":
+        input_edition = "Pokemon Ultra Prism"
+        input_card_name = "Frost Rotom"
+        input_card_number = "41"
+        
+
     print(f"\nExtrayendo datos para: {input_card_name} #{input_card_number} de la edición {input_edition}")
     
     # La función ahora devuelve un único diccionario con el precio Ungraded

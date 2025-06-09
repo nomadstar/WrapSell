@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
+// If you have OpenZeppelin installed locally via npm, use this path:
+import "../node_modules/@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
 interface IStablecoin {
     function transfer(address recipient, uint256 amount) external returns (bool);
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
@@ -16,34 +19,65 @@ struct Card {
     uint256 price;
     string url;
 }
-
+// Lista de direcciones autorizadas para agregar cartas
 contract Wrapsell is IStablecoin {
+    using SafeERC20 for IStablecoin;
+
+    // Only owner modifier moved inside the contract
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner can call this function");
+        _;
+    }
+
+    // Modificación: require mínimo 4 cartas para crear la pool
+    modifier requireMinCards(Card[] memory _cards) {
+        require(_cards.length >= 4, "At least 4 cards required to create the pool");
+        _;
+    }
+    // Permite al owner autorizar o desautorizar direcciones para agregar cartas
+    function setAllowedToAddCards(address account, bool allowed) external {
+        require(msg.sender == owner, "Only owner can set allowed addresses");
+        allowedToAddCards[account] = allowed;
+    }
+
+    function addCard(
+        string memory cardName,
+        string memory number,
+        string memory edition,
+        uint256 price,
+        string memory url
+    ) external onlyOwner {
+        cards.push(Card(cardName, number, edition, price, url));
+        // Actualizar el máximo minteable si se desea que refleje el nuevo valor total
+        maxMintable += price / 4;
+    }
+
+    // Permite al owner eliminar una carta por índice, pero no si quedan solo 4 cartas
+    function removeCard(uint256 index) external onlyOwner requireMinCards {
+        require(index < cards.length, "Card does not exist");
+        maxMintable -= cards[index].price / 4;
+        cards[index] = cards[cards.length - 1];
+        cards.pop();
+    }
+
+    // Permite al owner autorizar o desautorizar direcciones para agregar cartas
+    mapping(address => bool) public allowedToAddCards;
+    function setAllowedToAddCards(address account, bool allowed) external onlyOwner {
+        allowedToAddCards[account] = allowed;
+    }
+
+    function addCard(
+        string memory cardName,
+        string memory number,
+        string memory edition,
+        uint256 price,
+        string memory url
+    ) external onlyOwner {
+        cards.push(Card(cardName, number, edition, price, url));
+        // Actualizar el máximo minteable si se desea que refleje el nuevo valor total
+        maxMintable += price / 4;
+    }
     IStablecoin public stablecoin;
-
-    mapping(address => uint256) public balances;
-
-    // Variables solicitadas
-    address public owner;
-    uint256 public feePercent;
-    uint256 public totalDeposited;
-    uint256 public totalWithdrawn;
-
-    // Colección de cartas
-    Card[] public cards;
-
-    // Máximo minteable
-    uint256 public maxMintable;
-
-    // Stablecoin variables
-    string public name = "WrapSell Stablecoin";
-    string public symbol = "WSS";
-    uint8 public decimals = 18;
-    uint256 public totalSupply;
-
-    mapping(address => uint256) private _stableBalances;
-    mapping(address => mapping(address => uint256)) private _allowances;
-
-    event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
 
     constructor(
@@ -123,10 +157,8 @@ contract Wrapsell is IStablecoin {
         emit Approval(owner_, spender, amount);
     }
 
-    // --- WrapSell functions ---
-
     function deposit(uint256 amount) external {
-        require(stablecoin.transferFrom(msg.sender, address(this), amount), "Transfer failed");
+        SafeERC20.safeTransferFrom(IERC20(address(stablecoin)), msg.sender, address(this), amount);
         balances[msg.sender] += amount;
         totalDeposited += amount;
     }

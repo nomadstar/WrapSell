@@ -1,3 +1,4 @@
 ganache/node_modules
 ganache/build
 .env
+node_modules
