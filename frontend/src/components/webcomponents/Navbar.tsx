@@ -35,7 +35,7 @@ const Navbar: React.FC<NavbarProps> = ({ isLoggedIn }) => {
                     <>
                         <li>
                             <a
-                                href="/login"
+                                href="/wallet"
                                 style={{
                                     color: '#fff',
                                     textDecoration: 'none',
@@ -59,38 +59,10 @@ const Navbar: React.FC<NavbarProps> = ({ isLoggedIn }) => {
                                     (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
                                 }}
                             >
-                                Login
+                                Login Wallet
                             </a>
                         </li>
-                        <li>
-                            <a
-                                href="/register"
-                                style={{
-                                    color: '#fff',
-                                    textDecoration: 'none',
-                                    background: 'rgba(197, 52, 219, 0.9)',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    padding: '0.5rem 1.2rem',
-                                    fontWeight: 'bold',
-                                    transition: 'background 0.2s, transform 0.2s, box-shadow 0.2s',
-                                    boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
-                                    display: 'inline-block'
-                                }}
-                                onMouseEnter={e => {
-                                    (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(197, 52, 219, 1)';
-                                    (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(-2px) scale(1.04)';
-                                    (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 4px 12px rgba(0,0,0,0.13)';
-                                }}
-                                onMouseLeave={e => {
-                                    (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(197, 52, 219, 0.9)';
-                                    (e.currentTarget as HTMLAnchorElement).style.transform = 'none';
-                                    (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
-                                }}
-                            >
-                                Register
-                            </a>
-                        </li></>
+                        </>
                 )}
             </ul>
         </nav>
