@@ -77,11 +77,13 @@ def extract_ungraded_card_data(edition_name, card_name_input, card_number_input)
 
     # --- 4. Construir el objeto JSON de salida ---
     card_data_output = {
-        "card_name": card_name_input.title(),
-        "card_number": str(card_number_input),
-        "card_edition": edition_name,
-        "price": ungraded_price,
-        "url": url
+        "name": card_name_input.title(),
+        "card_id": str(card_number_input),
+        "edition": edition_name,
+        "market_value": ungraded_price, #quitar signo peso para insersion en base de datos
+        "url": url,
+        "in_pool": "true",
+        "user_wallet": "null"
     }
 
     return card_data_output
