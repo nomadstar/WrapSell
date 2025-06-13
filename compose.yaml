@@ -38,16 +38,16 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
 
-  nextjs:
-    build:
-      context: ./frontend
-      dockerfile: dockerfile
-    container_name: nextjs_app
-    working_dir: /app
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-    # Uncomment if you want to use a local .env file
-    # env_file:
-    #   - ./frontend/.env
+#  nextjs:
+#    build:
+#      context: ./frontend
+#      dockerfile: dockerfile
+#    container_name: nextjs_app
+#    working_dir: /app
+#    ports:
+#      - "3000:3000"
+#    environment:
+#      - NODE_ENV=production
+#    # Uncomment if you want to use a local .env file
+#    # env_file:
+#    #   - ./frontend/.env

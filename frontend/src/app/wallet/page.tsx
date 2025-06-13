@@ -1,65 +1,89 @@
 
 'use client';
+import React, { useEffect, useState } from 'react';
 
-import React from 'react';
-import AnimatedBackground from './background';
-export default function LoadingWallet() {
-    return (
-        <div style={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: '#f5f5f5',
-            position: 'relative',
-            zIndex: 0
-        }}>
-            <AnimatedBackground />
-            <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100vw',
-                height: '100vh',
-                background: 'rgba(255,255,255,0.85)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 2,
-                flexDirection: 'column'
-            }}>
-                <div style={{
-                    marginBottom: '1.5rem',
-                    display: 'flex',
-                    justifyContent: 'center'
-                }}>
-                    <span style={{
-                        display: 'inline-block',
-                        width: '48px',
-                        height: '48px',
-                        border: '6px solid #ccc',
-                        borderTop: '6px solid #0070f3',
-                        borderRadius: '50%',
-                        animation: 'spin 1s linear infinite'
-                    }} />
-                    <style>
-                        {`
-                        @keyframes spin {
-                            0% { transform: rotate(0deg); }
-                            100% { transform: rotate(360deg); }
-                        }
-                        `}
-                    </style>
+
+type Wallet = {
+    id: string;
+    name: string;
+    address: string;
+};
+
+const mockDetectWallets = async (): Promise<Wallet[]> => {
+    // Simulación: reemplaza esto con la detección real de wallets
+    return [
+        // { id: '1', name: 'MetaMask', address: '0x123...' },
+        // { id: '2', name: 'WalletConnect', address: '0xabc...' },
+    ];
+};
+
+export default function WalletPage() {
+    const [wallets, setWallets] = useState<Wallet[]>([]);
+    const [selectedWallet, setSelectedWallet] = useState<Wallet | null>(null);
+
+    useEffect(() => {
+        mockDetectWallets().then(setWallets);
+    }, []);
+
+    const handleSelect = (wallet: Wallet) => {
+        setSelectedWallet(wallet);
+        // Aquí puedes agregar la lógica para vincular la wallet seleccionada
+    };
+
+    if (wallets.length === 1) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen">
+                <h1 className="text-2xl font-bold mb-4">Wallet detectada</h1>
+                <div className="p-4 border rounded">
+                    <p><strong>{wallets[0].name}</strong></p>
+                    <p>{wallets[0].address}</p>
                 </div>
-                <div style={{
-                    fontSize: '2rem',
-                    fontWeight: 'bold',
-                    color: '#333',
-                    textAlign: 'center'
-                }}>
-                    Loading wallet please wait
-                </div>
+                <button
+                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
+                    onClick={() => handleSelect(wallets[0])}
+                >
+                    Vincular esta wallet
+                </button>
             </div>
+        );
+    }
+
+    if (wallets.length === 0 || wallets.length > 1) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen">
+                <h1 className="text-2xl font-bold mb-4">
+                    {wallets.length === 0 ? 'No se detectaron wallets' : 'Selecciona una wallet para vincular'}
+                </h1>
+                {wallets.length > 1 && (
+                    <ul className="mb-4">
+                        {wallets.map(wallet => (
+                            <li key={wallet.id} className="mb-2">
+                                <button
+                                    className="px-4 py-2 border rounded hover:bg-gray-100"
+                                    onClick={() => handleSelect(wallet)}
+                                >
+                                    {wallet.name} ({wallet.address})
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+                {wallets.length === 0 && (
+                    <p>Por favor, instala o conecta una wallet compatible.</p>
+                )}
+                {selectedWallet && (
+                    <div className="mt-4 p-4 border rounded">
+                        <p>Wallet seleccionada: <strong>{selectedWallet.name}</strong></p>
+                        <p>{selectedWallet.address}</p>
+                    </div>
+                )}
+            </div>
+        );
+    }
+    return (
+        <div className="flex flex-col items-center justify-center min-h-screen">
+            <h1 className="text-2xl font-bold mb-4">Cargando wallets...</h1>
+            <p>Por favor, espera mientras se detectan las wallets disponibles.</p>
         </div>
     );
 }

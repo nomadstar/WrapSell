@@ -24,10 +24,10 @@ if (!projectId) {
 
 // Set up metadata
 const metadata = {
-  name: "Example",
-  description: "AppKit Example",
-  url: "https://reown.com/appkit", // origin must match your domain & subdomain
-  icons: ["https://assets.reown.com/reown-profile-pic.png"],
+  name: "WarpSell",
+  description: "A decentralized marketplace for web3 stablecoins based on TCG cards.",
+  url: "https://WrapSell.com/appkit", // origin must match your domain & subdomain
+  icons: ["/Simbol.png"],
 };
 
 // Create the modal
@@ -39,7 +39,10 @@ const modal = createAppKit({
   metadata: metadata,
   features: {
     analytics: true, // Optional - defaults to your Cloud configuration
+    socials: ['google', 'apple', 'github', 'discord'], // Optional - defaults to your Cloud configuration
+    emailShowWallets: true, // Optional - defaults to your Cloud configuration
   },
+  themeMode: "light", // Optional - defaults to your Cloud configuration
 });
 
 function ContextProvider({
