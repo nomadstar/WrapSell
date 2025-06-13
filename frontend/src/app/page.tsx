@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Wallet, Database, Zap, RefreshCw, CheckCircle, AlertCircle, LogOut, Menu, X } from 'lucide-react';
 import { useAppKit } from '@reown/appkit/react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useRouter } from 'next/navigation'; // Para Next.js 13+
 
 const SIMPLE_STORAGE_CONTRACT_ADDRESS = "0xcb8b8317ef7e5f5afb641813e07177cbd791bf8e";
 
@@ -109,31 +110,40 @@ const Navbar = () => {
   );
 };
 
-const Hero = () => (
-  <div className="relative overflow-hidden">
-    <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-indigo-900/20"></div>
-    <div className="relative bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 text-white p-12 text-center shadow-2xl">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-5xl md:text-6xl font-extrabold mb-6 leading-tight">
-          Welcome to <span className="text-yellow-300">WrapSell</span>
-        </h1>
-        <p className="text-xl md:text-2xl font-light opacity-90 max-w-2xl mx-auto">
-          Connect your wallet and interact with blockchain smart contracts seamlessly
-        </p>
-        <div className="mt-8 flex justify-center space-x-4">
-          <div className="flex items-center space-x-2 bg-white/10 rounded-full px-4 py-2">
-            <Database className="w-5 h-5" />
-            <span className="text-sm font-medium">Smart Contracts</span>
-          </div>
-          <div className="flex items-center space-x-2 bg-white/10 rounded-full px-4 py-2">
-            <Zap className="w-5 h-5" />
-            <span className="text-sm font-medium">Fast Transactions</span>
+const Hero = () => {
+  const [bubbleCount, setBubbleCount] = useState(5);
+
+  return (
+    <div className="relative overflow-hidden">
+      <div className="animated-bg">
+        {Array.from({ length: bubbleCount }, (_, index) => (
+          <div key={index} className={`bubble bubble${(index % 5) + 1}`}></div>
+        ))}
+      </div>
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-indigo-900/20"></div>
+      <div className="relative bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 text-white p-12 text-center shadow-2xl">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-5xl md:text-6xl font-extrabold mb-6 leading-tight">
+            Welcome to <span className="text-yellow-300">WrapSell</span>
+          </h1>
+          <p className="text-xl md:text-2xl font-light opacity-90 max-w-2xl mx-auto">
+            Buy and sell TCG cards with crypto.
+          </p>
+          <div className="mt-8 flex justify-center space-x-4">
+            <div className="flex items-center space-x-2 bg-white/10 rounded-full px-4 py-2">
+              <Database className="w-5 h-5" />
+              <span className="text-sm font-medium">TCG Marketplace</span>
+            </div>
+            <div className="flex items-center space-x-2 bg-white/10 rounded-full px-4 py-2">
+              <Zap className="w-5 h-5" />
+              <span className="text-sm font-medium">Crypto Payments</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const StatusMessage = ({ message, type }) => {
   const getStyles = () => {
@@ -171,9 +181,11 @@ const StatusMessage = ({ message, type }) => {
 function WrapSellApp() {
   const { open } = useAppKit();
   const { address, isConnected } = useAccount();
+  const router = useRouter(); // Hook para navegación
   const [newValue, setNewValue] = useState("");
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("info");
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Read contract value
   const { 
@@ -213,6 +225,19 @@ function WrapSellApp() {
     setTimeout(() => setMessage(""), 5000);
   };
 
+  // Efecto para redirigir cuando se conecte la billetera
+  useEffect(() => {
+    if (isConnected && address && !isRedirecting) {
+      setIsRedirecting(true);
+      showMessage("🎉 Wallet connected! Redirecting to dashboard...", "success");
+      
+      // Pequeño delay para mostrar el mensaje antes de redirigir
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1500);
+    }
+  }, [isConnected, address, router, isRedirecting]);
+
   // Handle transaction success
   useEffect(() => {
     if (isConfirmed) {
@@ -249,6 +274,7 @@ function WrapSellApp() {
   };
 
   const handleDisconnect = () => {
+    setIsRedirecting(false); // Reset redirection flag
     open();
   };
 
@@ -308,73 +334,88 @@ function WrapSellApp() {
 
             {isConnected ? (
               <div className="space-y-8">
-                {/* Wallet Info */}
-                <div className="text-center p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-100">
-                  <div className="flex items-center justify-center mb-3">
-                    <Wallet className="w-6 h-6 text-green-600 mr-2" />
-                    <span className="font-semibold text-green-800">Wallet Connected</span>
+                {isRedirecting ? (
+                  // Mostrar estado de redirección
+                  <div className="text-center p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-100">
+                    <div className="flex items-center justify-center mb-3">
+                      <RefreshCw className="w-6 h-6 text-green-600 mr-2 animate-spin" />
+                      <span className="font-semibold text-green-800">Redirecting to Dashboard...</span>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      Please wait while we redirect you to your dashboard.
+                    </p>
                   </div>
-                  <p className="text-sm text-gray-600 font-mono break-all">
-                    {address}
-                  </p>
-                </div>
-
-                {/* Read Contract */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <button
-                      onClick={handleReadValue}
-                      className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
-                      disabled={isReading}
-                    >
-                      <RefreshCw className={`w-5 h-5 ${isReading ? 'animate-spin' : ''}`} />
-                      <span>{isReading ? "Reading..." : "Read Value"}</span>
-                    </button>
-                    
-                    {contractValue !== undefined && (
-                      <div className="text-center">
-                        <p className="text-sm text-gray-500 mb-1">Current Value</p>
-                        <p className="text-2xl font-bold text-green-600">
-                          {contractValue.toString()}
-                        </p>
+                ) : (
+                  <>
+                    {/* Wallet Info */}
+                    <div className="text-center p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-100">
+                      <div className="flex items-center justify-center mb-3">
+                        <Wallet className="w-6 h-6 text-green-600 mr-2" />
+                        <span className="font-semibold text-green-800">Wallet Connected</span>
                       </div>
-                    )}
-                  </div>
-                </div>
+                      <p className="text-sm text-gray-600 font-mono break-all">
+                        {address}
+                      </p>
+                    </div>
 
-                {/* Write Contract */}
-                <div className="space-y-4">
-                  <input
-                    type="number"
-                    placeholder="Enter new value (e.g., 42)"
-                    className="w-full border border-gray-300 rounded-xl py-4 px-5 text-gray-700 text-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 shadow-inner"
-                    value={newValue}
-                    onChange={(e) => setNewValue(e.target.value)}
-                    min="0"
-                    disabled={isWriting || isConfirming}
-                  />
-                  <button
-                    onClick={handleWriteValue}
-                    className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
-                    disabled={isWriting || isConfirming}
-                  >
-                    <Database className={`w-5 h-5 ${(isWriting || isConfirming) ? 'animate-pulse' : ''}`} />
-                    <span>
-                      {isWriting ? "Sending Transaction..." : 
-                       isConfirming ? "Confirming..." : 
-                       "Write Value"}
-                    </span>
-                  </button>
-                </div>
+                    {/* Read Contract */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <button
+                          onClick={handleReadValue}
+                          className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
+                          disabled={isReading}
+                        >
+                          <RefreshCw className={`w-5 h-5 ${isReading ? 'animate-spin' : ''}`} />
+                          <span>{isReading ? "Reading..." : "Read Value"}</span>
+                        </button>
+                        
+                        {contractValue !== undefined && (
+                          <div className="text-center">
+                            <p className="text-sm text-gray-500 mb-1">Current Value</p>
+                            <p className="text-2xl font-bold text-green-600">
+                              {contractValue.toString()}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
 
-                {/* Disconnect */}
-                <button
-                  onClick={handleDisconnect}
-                  className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200"
-                >
-                  <LogOut className="w-5 h-5" />
-                  <span>Disconnect Wallet</span>
-                </button>
+                    {/* Write Contract */}
+                    <div className="space-y-4">
+                      <input
+                        type="number"
+                        placeholder="Enter new value (e.g., 42)"
+                        className="w-full border border-gray-300 rounded-xl py-4 px-5 text-gray-700 text-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 shadow-inner"
+                        value={newValue}
+                        onChange={(e) => setNewValue(e.target.value)}
+                        min="0"
+                        disabled={isWriting || isConfirming}
+                      />
+                      <button
+                        onClick={handleWriteValue}
+                        className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
+                        disabled={isWriting || isConfirming}
+                      >
+                        <Database className={`w-5 h-5 ${(isWriting || isConfirming) ? 'animate-pulse' : ''}`} />
+                        <span>
+                          {isWriting ? "Sending Transaction..." : 
+                           isConfirming ? "Confirming..." : 
+                           "Write Value"}
+                        </span>
+                      </button>
+                    </div>
+
+                    {/* Disconnect */}
+                    <button
+                      onClick={handleDisconnect}
+                      className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      <span>Disconnect Wallet</span>
+                    </button>
+                  </>
+                )}
               </div>
             ) : (
               <div className="text-center space-y-6">
@@ -403,18 +444,18 @@ function WrapSellApp() {
         <div className="mt-16 grid md:grid-cols-3 gap-8">
           <div className="text-center p-6 bg-white rounded-2xl shadow-lg">
             <Database className="w-12 h-12 text-blue-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Smart Contract</h3>
-            <p className="text-gray-600">Real blockchain storage contract for reading and writing values</p>
+            <h3 className="text-xl font-semibold mb-2">TCG Marketplace</h3>
+            <p className="text-gray-600">Buy, sell, and discover your favorite TCG cards</p>
           </div>
           <div className="text-center p-6 bg-white rounded-2xl shadow-lg">
             <Zap className="w-12 h-12 text-purple-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Fast & Secure</h3>
-            <p className="text-gray-600">Optimized for quick transactions and secure blockchain operations</p>
+            <h3 className="text-xl font-semibold mb-2">Secure Crypto Payments</h3>
+            <p className="text-gray-600">Use crypto to buy and sell cards safely and securely</p>
           </div>
           <div className="text-center p-6 bg-white rounded-2xl shadow-lg">
             <Wallet className="w-12 h-12 text-green-500 mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Easy Connection</h3>
-            <p className="text-gray-600">Multi-wallet support with intuitive connection interface</p>
+            <p className="text-gray-600">Connect your wallet and start trading TCG cards</p>
           </div>
         </div>
       </main>
