@@ -25,6 +25,7 @@ function RegisterForm({ isMobile }: RegisterFormProps) {
     return (
         <div>
             {/* Register form goes here. isMobile: {isMobile ? "Yes" : "No"} */}
+            <p>Is mobile: {isMobile ? "Yes" : "No"}</p>
         </div>
     );
 }

@@ -1,6 +1,7 @@
 -- Crear tabla de usuarios
 CREATE TABLE IF NOT EXISTS users (
     wallet_address VARCHAR(42) PRIMARY KEY,
+    wallet_type VARCHAR(25) NOT NULL,
     username VARCHAR(30),
     email VARCHAR(100)
 );

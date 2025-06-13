@@ -42,7 +42,8 @@ const modal = createAppKit({
     socials: ['google', 'apple', 'github', 'discord'], // Optional - defaults to your Cloud configuration
     emailShowWallets: true, // Optional - defaults to your Cloud configuration
   },
-  themeMode: "light", // Optional - defaults to your Cloud configuration
+  themeMode: "light"
+  // Optional - defaults to your Cloud configuration
 });
 
 function ContextProvider({
