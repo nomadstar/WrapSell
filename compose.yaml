@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # ganache:
@@ -17,8 +17,6 @@ services:
   #     - GAS_LIMIT=8000000
   #     - FORK_URL=http://localhost:8545
   #     - FORK_BLOCK_NUMBER=0
-
-  
 
   getter:
     image: python:latest
@@ -39,7 +37,6 @@ services:
       POSTGRES_DB: mydatabase
     volumes:
       - db_data:/var/lib/postgresql/data
-    
 
   nextjs:
     build:
