@@ -16,7 +16,7 @@ import SimpleStorageContractABI from "../../contract/SimpleStorageContractABI.js
 // Config
 import { config } from "../../config";
 import Navbar from "../components/webcomponents/Navbar";
-
+import Carrousel from "../components/webcomponents/Carrousel";
 export default function Home() {
   const { address, isConnected } = useAccount();
   const { connect } = useConnect();
@@ -61,6 +61,10 @@ export default function Home() {
   };
 
   return (
-  <Navbar isLoggedIn={isConnected} />
+    <>
+      <Navbar/>
+      <Carrousel />
+    </>
   );
 }
+
