@@ -1,10 +1,11 @@
 'use client';
 import React, { useState } from 'react';
+import Loading from '../components/loading';
 import Sidebar from '../components/sidebar';
+
 import Dashboard from './dashboard';
 import StatsWidget from './statswidget';
 import Card from './card';
-
 
 // Mock data for demonstration
 const mockPriceHistory = [
@@ -94,6 +95,20 @@ const mockTCGCards = [
 
 const WrapPoolPage = () => {
   const [activeView, setActiveView] = useState<'dashboard' | 'pool' | 'cards'>('dashboard');
+  const [isLoading, setIsLoading] = useState(true);
+
+  React.useEffect(() => {
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   const renderSidebarContent = () => (
     <nav>
@@ -179,3 +194,4 @@ const WrapPoolPage = () => {
 };
 
 export default WrapPoolPage;
+

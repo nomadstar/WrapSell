@@ -55,12 +55,12 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
                                 <nav>
                                     <ul className="space-y-2">
                                         <li>
-                                            <a href="#" className="block p-2 rounded hover:bg-gray-700">
+                                            <a href="dashboard" className="block p-2 rounded hover:bg-gray-700">
                                                 Dashboard
                                             </a>
                                         </li>
                                          <li>
-                                            <a href="#" className="block p-2 rounded hover:bg-gray-700">
+                                            <a href="mypools" className="block p-2 rounded hover:bg-gray-700">
                                                 My Pools
                                             </a>
                                         </li>
