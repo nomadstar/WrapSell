@@ -111,12 +111,10 @@ const Navbar = () => {
 };
 
 const Hero = () => {
-  const [bubbleCount, setBubbleCount] = useState(5);
-
   return (
     <div className="relative overflow-hidden">
       <div className="animated-bg">
-        {Array.from({ length: bubbleCount }, (_, index) => (
+        {Array.from({ length: 5 }, (_, index) => (
           <div key={index} className={`bubble bubble${(index % 5) + 1}`}></div>
         ))}
       </div>

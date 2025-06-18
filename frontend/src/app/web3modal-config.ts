@@ -26,7 +26,6 @@ export const configureWeb3Modal = () => {
     projectId,
     themeMode: "dark",
     themeVariables: {
-      "--w3m-border-radius": "0.75rem",
       "--w3m-accent": "#4f46e5",
     },
   });

@@ -1,10 +1,6 @@
 import { useAccount } from 'wagmi';
 import React from 'react';
 
-interface NavbarProps {
-    isLoggedIn: boolean;
-}
-
 const Navbar: React.FC = () => {
     const { isConnected: isLoggedIn } = useAccount();
     return (

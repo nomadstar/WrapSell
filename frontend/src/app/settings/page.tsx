@@ -44,7 +44,7 @@ export default function SettingsPage() {
             // Add wallet to backend
             handleAddWallet(address);
         }
-    }, [isConnected, address]);
+    }, [isConnected, address, userData.connectedWallets]);
 
     const fetchUserData = async () => {
         try {
@@ -76,31 +76,33 @@ export default function SettingsPage() {
                 connectedWallets: [...prev.connectedWallets, walletAddress]
             }));
             setSuccess('Wallet conectada correctamente');
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : 'Error al conectar la wallet';
+            setError(errorMessage);
         }
     };
 
     const handleDisconnectWallet = async (walletAddress: string) => {
         try {
             const res = await fetch('/api/user/wallets', {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ walletAddress }),
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ walletAddress }),
             });
             
             if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || 'Error al desconectar la wallet');
+            const errorData = await res.json();
+            throw new Error(errorData.message || 'Error al desconectar la wallet');
             }
             
             setUserData(prev => ({
-                ...prev,
-                connectedWallets: prev.connectedWallets.filter(wallet => wallet !== walletAddress)
+            ...prev,
+            connectedWallets: prev.connectedWallets.filter(wallet => wallet !== walletAddress)
             }));
             setSuccess('Wallet desconectada correctamente');
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : 'Error al desconectar la wallet';
+            setError(errorMessage);
         }
     };
 
@@ -113,22 +115,23 @@ export default function SettingsPage() {
         setSuccess('');
         try {
             const res = await fetch('/api/user/profile', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: userData.name,
-                    surname: userData.surname,
-                    direction: userData.direction
-                }),
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: userData.name,
+                surname: userData.surname,
+                direction: userData.direction
+            }),
             });
             if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || 'Error al guardar los datos');
+            const errorData = await res.json();
+            throw new Error(errorData.message || 'Error al guardar los datos');
             }
             setSuccess('Datos guardados correctamente');
             setIsEditing(false);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : 'Error al guardar los datos';
+            setError(errorMessage);
         }
     };
 

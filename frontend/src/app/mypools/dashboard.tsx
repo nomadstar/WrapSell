@@ -14,8 +14,6 @@ import {
 } from 'lucide-react';
 
 const Dashboard = () => {
-    const [walletBalance] = useState(2.3458);
-    const [poolValue] = useState(8647.52);
     const [userInvestment] = useState(1250.00);
     const [isConnected, setIsConnected] = useState(true);
     const [showPoolsMenu, setShowPoolsMenu] = useState(false);

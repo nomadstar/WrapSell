@@ -1,8 +1,7 @@
 'use client';
+import Image from 'next/image';
 import React, { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-
-
 
 interface PriceHistory {
     date: string;
@@ -48,11 +47,12 @@ const Card: React.FC<CardProps> = ({ cardData }) => {
                 onClick={handleCardClick}
             >
                 {/* Card Image */}
-                <div className="relative">
-                    <img
+                <div className="relative h-64">
+                    <Image
                         src={cardData.imageUrl}
                         alt={cardData.name}
-                        className="w-full h-64 object-cover"
+                        fill
+                        className="object-cover"
                     />
                     <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs">
                         {cardData.tcgName}
@@ -141,11 +141,12 @@ const Card: React.FC<CardProps> = ({ cardData }) => {
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Expanded Card Image */}
-                        <div className="relative">
-                            <img
+                        <div className="relative h-80">
+                            <Image
                                 src={cardData.imageUrl}
                                 alt={cardData.name}
-                                className="w-full h-80 object-cover"
+                                fill
+                                className="object-cover"
                             />
                             <div className="absolute top-4 right-4 bg-black bg-opacity-70 text-white px-3 py-2 rounded text-sm">
                                 {cardData.tcgName}
