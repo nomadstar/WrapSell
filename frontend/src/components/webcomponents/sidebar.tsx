@@ -1,8 +1,6 @@
 'use client';
 import React, { useState } from 'react';
 
-
-
 interface SidebarProps {
     children?: React.ReactNode;
 }
@@ -65,13 +63,13 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
                                             </a>
                                         </li>
                                         <li>
-                                            <a href="#" className="block p-2 rounded hover:bg-gray-700">
+                                            <a href="settings" className="block p-2 rounded hover:bg-gray-700">
                                                 Settings
                                             </a>
                                         </li>
                                         <li>
                                             <a href="#" className="block p-2 rounded hover:bg-gray-700">
-                                                Profile
+                                                Stats
                                             </a>
                                         </li>
                                     </ul>

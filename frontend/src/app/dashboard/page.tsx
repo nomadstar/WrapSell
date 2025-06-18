@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
-import Loading from '../components/loading';
-import Sidebar from '../components/sidebar';
+import Loading from '../../components/webcomponents/loading';
+import Sidebar from '../../components/webcomponents/sidebar';
 
 import Dashboard from './dashboard';
 import StatsWidget from './statswidget';

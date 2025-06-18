@@ -145,7 +145,7 @@ const Hero = () => {
   );
 };
 
-const StatusMessage = ({ message, type }) => {
+const StatusMessage = ({ message, type }: { message: string; type: string }) => {
   const getStyles = () => {
     switch (type) {
       case 'success':
@@ -219,7 +219,7 @@ function WrapSellApp() {
     hash: writeData,
   });
 
-  const showMessage = (msg, type = "info") => {
+  const showMessage = (msg: string, type: string = "info") => {
     setMessage(msg);
     setMessageType(type);
     setTimeout(() => setMessage(""), 5000);
@@ -305,7 +305,8 @@ function WrapSellApp() {
       showMessage("📝 Transaction submitted! Waiting for confirmation...", "info");
     } catch (error) {
       console.error("Error writing value:", error);
-      showMessage(`❌ Transaction failed: ${error.message || "Unknown error"}`, "error");
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      showMessage(`❌ Transaction failed: ${errorMessage}`, "error");
     }
   };
 
@@ -370,7 +371,7 @@ function WrapSellApp() {
                           <span>{isReading ? "Reading..." : "Read Value"}</span>
                         </button>
                         
-                        {contractValue !== undefined && (
+                        {contractValue !== undefined && contractValue !== null && (
                           <div className="text-center">
                             <p className="text-sm text-gray-500 mb-1">Current Value</p>
                             <p className="text-2xl font-bold text-green-600">
