@@ -6,7 +6,7 @@
   "keywords": [],
   "license": "ISC",
   "author": "",
-  "type": "typescript",
+  "type": "commonjs",
   "main": "index.js",
   "scripts": {
     "dev": "next dev",
@@ -47,12 +47,6 @@
     "@reown/appkit-adapter-wagmi": "^1.7.10",
     "@tanstack/react-query": "^5.80.10",
     "@vercel/analytics": "^1.5.0",
-<<<<<<< HEAD
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "cmdk": "^1.1.1",
-    "drizzle-orm": "^0.44.1",
-=======
     "@wagmi/connectors": "^5.8.5",
     "@web3modal/siwe": "^5.1.11",
     "@web3modal/wagmi": "^5.1.11",
@@ -61,8 +55,6 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.44.2",
->>>>>>> 235f5df (Fix front)
-    "drizzle-zod": "^0.8.2",
     "embla-carousel-react": "^8.6.0",
     "ethers": "^6.14.4",
     "input-otp": "^1.4.2",
@@ -72,25 +64,11 @@
     "next-auth": "^4.24.11",
     "next-themes": "^0.4.6",
     "radix-ui": "^1.4.2",
-<<<<<<< HEAD
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.56.4",
-    "react-resizable-panels": "^3.0.2",
-=======
-    "react": "^19.1.0",
-    "react-day-picker": "^9.7.0",
-    "react-dom": "^19.1.0",
-    "react-hook-form": "^7.58.1",
     "react-resizable-panels": "^3.0.3",
->>>>>>> 235f5df (Fix front)
-    "recharts": "^2.15.3",
-    "sonner": "^2.0.5",
-    "tailwind-merge": "^3.3.1",
-    "vaul": "^1.1.2",
-    "viem": "^2.31.3",
-    "wagmi": "^2.15.6",
-    "zod": "^3.25.67"
+    "react-day-picker": "^9.7.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
