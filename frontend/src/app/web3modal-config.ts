@@ -1,28 +1,28 @@
-import { createWeb3Modal, defaultConfig } from "@web3modal/ethers/react";
+import { createWeb3Modal, defaultWagmiConfig } from "@web3modal/wagmi/react";
+import { mainnet } from "viem/chains";
+import * as React from "react";
 
 // Project ID from WalletConnect (replace with your own)
 const projectId = "YOUR_WALLETCONNECT_PROJECT_ID";
-
 // Define chains
-const mainnet = {
-  chainId: 1,
-  name: "Ethereum",
-  currency: "ETH",
-  explorerUrl: "https://etherscan.io",
-  rpcUrl: "https://cloudflare-eth.com",
-};
+const chains = [mainnet] as const;
 
 const metadata = {
   name: "WrapSell",
-  description: "A sleek dApp for interacting with Simple Storage smart contracts",
-  url: "https://your-dapp-url.com",
-  icons: ["/favicon.ico"],
+  description: "A decentralized marketplace for TGC cards and collectibles",
+  url: "https://wrapsell.com",
+  icons: ["https://wrapsell.com/icon.png"]
 };
 
 export const configureWeb3Modal = () => {
+  const wagmiConfig = defaultWagmiConfig({
+    chains,
+    projectId,
+    metadata
+  });
+
   createWeb3Modal({
-    ethersConfig: defaultConfig({ metadata }),
-    chains: [mainnet],
+    wagmiConfig,
     projectId,
     themeMode: "dark",
     themeVariables: {
