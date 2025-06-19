@@ -85,4 +85,54 @@ export const createCard = async (card: Omit<Card, 'id'>): Promise<Card> => {
 };
 
 export const updateCard = async (id: number, card: Partial<Card>): Promise<Card> => {
-    const response = await fetch(`${API_BASE_URL}/cards/${id}`,
+    const response = await fetch(`${API_BASE_URL}/cards/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(card),
+    });
+    if (!response.ok) throw new Error('Failed to update card');
+    return response.json();
+};
+
+export const deleteCard = async (id: number): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/cards/${id}`, {
+        method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Failed to delete card');
+};
+// Transaction queries
+export const getTransactions = async (): Promise<Transaction[]> => {
+    const response = await fetch(`${API_BASE_URL}/transactions`);
+    if (!response.ok) throw new Error('Failed to fetch transactions');
+    return response.json();
+};
+
+export const getTransactionsByUser = async (walletAddress: string): Promise<Transaction[]> => {
+    const response = await fetch(`${API_BASE_URL}/transactions/user/${walletAddress}`);
+    if (!response.ok) throw new Error('Failed to fetch user transactions');
+    return response.json();
+};
+export const createTransaction = async (transaction: Omit<Transaction, 'id'>): Promise<Transaction> => {
+    const response = await fetch(`${API_BASE_URL}/transactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(transaction),
+    });
+    if (!response.ok) throw new Error('Failed to create transaction');
+    return response.json();
+};
+export const updateTransaction = async (id: number, transaction: Partial<Transaction>): Promise<Transaction> => {
+    const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(transaction),
+    });
+    if (!response.ok) throw new Error('Failed to update transaction');
+    return response.json();
+};
+export const deleteTransaction = async (id: number): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
+        method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Failed to delete transaction');
+};
