@@ -64,8 +64,17 @@ def watch_and_insert_json_clean_dollars(directory, table_name, db_url, poll_inte
 
 def json_to_insert(table_name, json_obj):
     columns = ', '.join(json_obj.keys())
-    values = ', '.join([f"'{str(v).replace("'", "''")}'" if isinstance(v, str) else str(v) for v in json_obj.values()])
-    insert_stmt = f"INSERT INTO {table_name} ({columns}) VALUES ({values});"
+    values = []
+    for v in json_obj.values():
+        if isinstance(v, str):
+            # Escapar comillas simples duplicándolas
+            escaped_value = str(v).replace("'", "''")
+            values.append(f"'{escaped_value}'")
+        else:
+            values.append(str(v))
+    
+    values_str = ', '.join(values)
+    insert_stmt = f"INSERT INTO {table_name} ({columns}) VALUES ({values_str});"
     return insert_stmt
 
 def insert_card_data_to_db(edition_name, card_name, card_number, table_name, db_url):
