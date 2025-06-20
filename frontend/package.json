@@ -12,7 +12,7 @@
   "dev": "npm dev",
   "build": "npm build",
   "start": "npm start -p $PORT",
-  "heroku-postbuild": "npm install && npm run build"
+  "heroku-postbuild": "cd frontend && npm install && npm run build"
 }
 
 ,
