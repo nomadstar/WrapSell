@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import AnimatedBackground from './background';
+import AnimatedBackground from '../components/webcomponents/background';
 export default function LoadingWallet() {
     return (
         <div style={{

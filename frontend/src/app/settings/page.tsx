@@ -4,6 +4,7 @@ import { useAppKit } from '@reown/appkit/react';
 import { useAppKitAccount } from '@reown/appkit/react';
 import AnimatedBackground from './background';
 import Sidebar from '../../components/webcomponents/sidebar';
+import Background from '../../components/webcomponents/background';
 
 interface UserData {
     name: string;
