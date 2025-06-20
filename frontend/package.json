@@ -8,14 +8,13 @@
   "author": "",
   "type": "commonjs",
   "main": "index.js",
-"scripts": {
-  "dev": "npm dev",
-  "build": "npm build",
-  "start": "npm start -p $PORT",
-  "heroku-postbuild": "cd frontend && npm install && npm run build"
-}
-
-,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "heroku-postbuild": "npm run build"
+  },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
     "@neondatabase/serverless": "^1.0.1",
