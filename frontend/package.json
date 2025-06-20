@@ -8,11 +8,13 @@
   "author": "",
   "type": "commonjs",
   "main": "index.js",
-  "scripts": {
+"scripts": {
+  "heroku-postbuild": "npm run build",
   "dev": "next dev",
   "build": "next build",
   "start": "next start -p $PORT"
-},
+}
+,
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
     "@neondatabase/serverless": "^1.0.1",
