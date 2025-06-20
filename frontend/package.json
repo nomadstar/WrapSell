@@ -9,9 +9,9 @@
   "type": "commonjs",
   "main": "index.js",
 "scripts": {
-  "dev": "next dev",
-  "build": "next build",
-  "start": "next start -p $PORT",
+  "dev": "npm dev",
+  "build": "npm build",
+  "start": "npm start -p $PORT",
   "heroku-postbuild": "npm install && npm run build"
 }
 
