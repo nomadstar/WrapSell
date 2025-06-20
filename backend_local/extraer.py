@@ -6,6 +6,17 @@ def format_for_url(text):
     """Convierte un texto a formato para URL (minúsculas, espacios a guiones)."""
     return text.lower().replace(' ', '-')
 
+def clean_price_value(price_text):
+    """Limpia el valor del precio y lo convierte a float si es posible."""
+    if not price_text or price_text == '-':
+        return None
+    
+    cleaned = price_text.replace('$', '').replace(',', '').strip()
+    try:
+        return float(cleaned)
+    except ValueError:
+        return None
+
 def extract_ungraded_card_data(edition_name, card_name_input, card_number_input):
     """
     Extrae la información y el precio Ungraded de una carta de Pokémon TCG
@@ -52,35 +63,28 @@ def extract_ungraded_card_data(edition_name, card_name_input, card_number_input)
     soup = BeautifulSoup(response.content, 'html.parser')
 
     # --- 3. Extraer el precio Ungraded ---
-    ungraded_price = "N/A"
+    ungraded_price = None  # Valor por defecto
     try:
         price_table = soup.find('table', id='price_data')
         if not price_table:
             print("Error: No se encontró la tabla de precios (id='price_data').")
-            return None
-
-        # Buscamos directamente la celda del precio 'Ungraded' que tiene el id 'used_price'
-        price_cell = price_table.find('td', id='used_price')
-        if price_cell:
-            price_span = price_cell.find('span', class_='price')
-            if price_span:
-                price_text = price_span.text.strip()
-                ungraded_price = price_text if price_text and price_text != '-' else "N/A"
-            else:
-                ungraded_price = "N/A (span.price no encontrado)"
+            # Continuamos para devolver otros datos aunque falte el precio
         else:
-            ungraded_price = "N/A (td con id 'used_price' no encontrado)"
-            
+            price_cell = price_table.find('td', id='used_price')
+            if price_cell:
+                price_span = price_cell.find('span', class_='price')
+                if price_span:
+                    price_text = price_span.text.strip()
+                    ungraded_price = clean_price_value(price_text)
     except Exception as e:
         print(f"Error al extraer el precio de la tabla: {e}")
-        return None
 
     # --- 4. Construir el objeto JSON de salida ---
     card_data_output = {
         "name": card_name_input.title(),
         "card_id": str(card_number_input),
         "edition": edition_name,
-        "market_value": ungraded_price, #quitar signo peso para insersion en base de datos
+        "market_value": ungraded_price,  # Ahora es float o None
         "url": url,
         "in_pool": "true",
         "user_wallet": "null"
