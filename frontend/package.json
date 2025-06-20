@@ -9,11 +9,12 @@
   "type": "commonjs",
   "main": "index.js",
 "scripts": {
-  "heroku-postbuild": "npm run build",
   "dev": "next dev",
   "build": "next build",
-  "start": "next start -p $PORT"
+  "start": "next start -p $PORT",
+  "heroku-postbuild": "npm run build"
 }
+
 ,
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
