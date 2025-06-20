@@ -12,7 +12,7 @@ app = Flask(__name__)
 DB_NAME = "mydatabase"
 DB_USER = "user"
 DB_PASSWORD = "password"
-DB_HOST = "localhost"
+DB_HOST = "db"
 DB_PORT = "5432"
 TABLE_NAME = "cards"  # Cambia esto por el nombre real de tu tabla
 
