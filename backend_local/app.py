@@ -191,6 +191,33 @@ def update_prices_endpoint():
         }), 200
     except Exception as e:
         return jsonify({"error": f"Error general al actualizar precios: {e}"}), 500
+    
+    
+@app.route('/users/<string:wallet_address>/cards', methods=['GET'])
+def get_user_cards(wallet_address):
+    """
+    Retorna todas las cartas asociadas a una dirección de billetera específica.
+    """
+    try:
+        conn = psycopg2.connect(DB_URL)
+        cur = conn.cursor()
+        
+        # Ejecuta una consulta para seleccionar las cartas filtrando por user_wallet
+        cur.execute("SELECT * FROM cards WHERE user_wallet = %s;", (wallet_address,))
+        
+        rows = cur.fetchall()
+        
+        # Si no se encuentran cartas, fetchall() devuelve una lista vacía, lo cual es correcto.
+        
+        columns = [desc[0] for desc in cur.description]
+        cards = [dict(zip(columns, row)) for row in rows]
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify(cards), 200
+    except Exception as e:
+        return jsonify({"error": f"Error al obtener las cartas del usuario: {e}"}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
