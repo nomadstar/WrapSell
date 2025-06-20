@@ -9,11 +9,10 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
+  "dev": "next dev",
+  "build": "next build",
+  "start": "next start -p $PORT"
+},
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
     "@neondatabase/serverless": "^1.0.1",
