@@ -1,29 +1,45 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Wallet, Database, Zap, RefreshCw, CheckCircle, AlertCircle, LogOut, Menu, X } from 'lucide-react';
-import { useAppKit } from '@reown/appkit/react';
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { useRouter } from 'next/navigation'; // Para Next.js 13+
+import React, { useState, useEffect } from "react";
+import {
+  Wallet,
+  Database,
+  Zap,
+  RefreshCw,
+  CheckCircle,
+  AlertCircle,
+  LogOut,
+  Menu,
+  X,
+} from "lucide-react";
+import { useAppKit } from "@reown/appkit/react";
+import {
+  useAccount,
+  useReadContract,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
+import { useRouter } from "next/navigation"; // Para Next.js 13+
 
-const SIMPLE_STORAGE_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_SIMPLE_STORAGE_CONTRACT_ADDRESS;
+const SIMPLE_STORAGE_CONTRACT_ADDRESS =
+  process.env.NEXT_PUBLIC_SIMPLE_STORAGE_CONTRACT_ADDRESS;
 
 // Simple Storage ABI
 const SIMPLE_STORAGE_ABI = [
   {
-    "inputs": [],
-    "name": "get",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
+    inputs: [],
+    name: "get",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
   },
   {
-    "inputs": [{ "internalType": "uint256", "name": "_value", "type": "uint256" }],
-    "name": "set",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }
+    inputs: [{ internalType: "uint256", name: "_value", type: "uint256" }],
+    name: "set",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
 ];
 
 const Navbar = () => {
@@ -46,12 +62,27 @@ const Navbar = () => {
             WrapSell
           </span>
         </div>
-        
+
         {/* Desktop Menu */}
         <div className="hidden md:flex space-x-6">
-          <a href="#" className="hover:text-purple-300 transition-colors duration-200 font-medium">Home</a>
-          <a href="#" className="hover:text-purple-300 transition-colors duration-200 font-medium">About</a>
-          <a href="#" className="hover:text-purple-300 transition-colors duration-200 font-medium">Contact</a>
+          <a
+            href="#"
+            className="hover:text-purple-300 transition-colors duration-200 font-medium"
+          >
+            Home
+          </a>
+          <a
+            href="#"
+            className="hover:text-purple-300 transition-colors duration-200 font-medium"
+          >
+            About
+          </a>
+          <a
+            href="#"
+            className="hover:text-purple-300 transition-colors duration-200 font-medium"
+          >
+            Contact
+          </a>
         </div>
 
         {/* Mobile Menu Button */}
@@ -69,28 +100,30 @@ const Navbar = () => {
       </div>
 
       {/* Mobile Menu Dropdown */}
-      <div className={`md:hidden absolute top-full left-0 right-0 bg-slate-800 shadow-2xl border-t border-slate-700 transition-all duration-300 ease-in-out ${
-        isMenuOpen 
-          ? 'opacity-100 translate-y-0 pointer-events-auto' 
-          : 'opacity-0 -translate-y-2 pointer-events-none'
-      }`}>
+      <div
+        className={`md:hidden absolute top-full left-0 right-0 bg-slate-800 shadow-2xl border-t border-slate-700 transition-all duration-300 ease-in-out ${
+          isMenuOpen
+            ? "opacity-100 translate-y-0 pointer-events-auto"
+            : "opacity-0 -translate-y-2 pointer-events-none"
+        }`}
+      >
         <div className="px-4 py-4 space-y-3">
-          <a 
-            href="#" 
+          <a
+            href="#"
             onClick={closeMenu}
             className="block py-3 px-4 rounded-lg hover:bg-slate-700 hover:text-purple-300 transition-all duration-200 font-medium"
           >
             Home
           </a>
-          <a 
-            href="#" 
+          <a
+            href="#"
             onClick={closeMenu}
             className="block py-3 px-4 rounded-lg hover:bg-slate-700 hover:text-purple-300 transition-all duration-200 font-medium"
           >
             About
           </a>
-          <a 
-            href="#" 
+          <a
+            href="#"
             onClick={closeMenu}
             className="block py-3 px-4 rounded-lg hover:bg-slate-700 hover:text-purple-300 transition-all duration-200 font-medium"
           >
@@ -101,7 +134,7 @@ const Navbar = () => {
 
       {/* Mobile Menu Overlay */}
       {isMenuOpen && (
-        <div 
+        <div
           className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-[-1]"
           onClick={closeMenu}
         />
@@ -143,25 +176,31 @@ const Hero = () => {
   );
 };
 
-const StatusMessage = ({ message, type }: { message: string; type: string }) => {
+const StatusMessage = ({
+  message,
+  type,
+}: {
+  message: string;
+  type: string;
+}) => {
   const getStyles = () => {
     switch (type) {
-      case 'success':
-        return 'bg-green-50 border-green-200 text-green-800';
-      case 'error':
-        return 'bg-red-50 border-red-200 text-red-800';
-      case 'info':
-        return 'bg-blue-50 border-blue-200 text-blue-800';
+      case "success":
+        return "bg-green-50 border-green-200 text-green-800";
+      case "error":
+        return "bg-red-50 border-red-200 text-red-800";
+      case "info":
+        return "bg-blue-50 border-blue-200 text-blue-800";
       default:
-        return 'bg-gray-50 border-gray-200 text-gray-800';
+        return "bg-gray-50 border-gray-200 text-gray-800";
     }
   };
 
   const getIcon = () => {
     switch (type) {
-      case 'success':
+      case "success":
         return <CheckCircle className="w-5 h-5" />;
-      case 'error':
+      case "error":
         return <AlertCircle className="w-5 h-5" />;
       default:
         return <AlertCircle className="w-5 h-5" />;
@@ -169,7 +208,9 @@ const StatusMessage = ({ message, type }: { message: string; type: string }) => 
   };
 
   return (
-    <div className={`border rounded-xl p-4 mb-6 flex items-center space-x-3 ${getStyles()}`}>
+    <div
+      className={`border rounded-xl p-4 mb-6 flex items-center space-x-3 ${getStyles()}`}
+    >
       {getIcon()}
       <span className="font-medium">{message}</span>
     </div>
@@ -186,33 +227,33 @@ function WrapSellApp() {
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Read contract value
-  const { 
-    data: contractValue, 
-    isLoading: isReading, 
+  const {
+    data: contractValue,
+    isLoading: isReading,
     refetch: refetchValue,
-    error: readError 
+    error: readError,
   } = useReadContract({
-    address: SIMPLE_STORAGE_CONTRACT_ADDRESS,
+    address: SIMPLE_STORAGE_CONTRACT_ADDRESS as `0x${string}`,
     abi: SIMPLE_STORAGE_ABI,
-    functionName: 'get',
+    functionName: "get",
     query: {
       enabled: isConnected,
-    }
+    },
   });
 
   // Write contract
-  const { 
-    writeContract, 
-    data: writeData, 
+  const {
+    writeContract,
+    data: writeData,
     isPending: isWriting,
-    error: writeError 
+    error: writeError,
   } = useWriteContract();
 
   // Wait for transaction receipt
-  const { 
-    isLoading: isConfirming, 
+  const {
+    isLoading: isConfirming,
     isSuccess: isConfirmed,
-    error: confirmError 
+    error: confirmError,
   } = useWaitForTransactionReceipt({
     hash: writeData,
   });
@@ -227,11 +268,14 @@ function WrapSellApp() {
   useEffect(() => {
     if (isConnected && address && !isRedirecting) {
       setIsRedirecting(true);
-      showMessage("🎉 Wallet connected! Redirecting to dashboard...", "success");
-      
+      showMessage(
+        "🎉 Wallet connected! Redirecting to dashboard...",
+        "success"
+      );
+
       // Pequeño delay para mostrar el mensaje antes de redirigir
       setTimeout(() => {
-        router.push('/dashboard');
+        router.push("/dashboard");
       }, 1500);
     }
   }, [isConnected, address, router, isRedirecting]);
@@ -239,7 +283,10 @@ function WrapSellApp() {
   // Handle transaction success
   useEffect(() => {
     if (isConfirmed) {
-      showMessage("🚀 Transaction confirmed! Value updated successfully.", "success");
+      showMessage(
+        "🚀 Transaction confirmed! Value updated successfully.",
+        "success"
+      );
       setNewValue("");
       // Refetch the contract value after successful write
       setTimeout(() => {
@@ -263,7 +310,10 @@ function WrapSellApp() {
 
   useEffect(() => {
     if (confirmError) {
-      showMessage(`❌ Transaction confirmation failed: ${confirmError.message}`, "error");
+      showMessage(
+        `❌ Transaction confirmation failed: ${confirmError.message}`,
+        "error"
+      );
     }
   }, [confirmError]);
 
@@ -287,7 +337,7 @@ function WrapSellApp() {
       showMessage("Please enter a value to write", "error");
       return;
     }
-    
+
     if (isNaN(Number(newValue)) || Number(newValue) < 0) {
       showMessage("Please enter a valid positive number", "error");
       return;
@@ -295,15 +345,19 @@ function WrapSellApp() {
 
     try {
       writeContract({
-        address: SIMPLE_STORAGE_CONTRACT_ADDRESS,
+        address: SIMPLE_STORAGE_CONTRACT_ADDRESS as `0x${string}`,
         abi: SIMPLE_STORAGE_ABI,
-        functionName: 'set',
+        functionName: "set",
         args: [BigInt(newValue)],
       });
-      showMessage("📝 Transaction submitted! Waiting for confirmation...", "info");
+      showMessage(
+        "📝 Transaction submitted! Waiting for confirmation...",
+        "info"
+      );
     } catch (error) {
       console.error("Error writing value:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       showMessage(`❌ Transaction failed: ${errorMessage}`, "error");
     }
   };
@@ -319,8 +373,9 @@ function WrapSellApp() {
             Smart Contract Interaction
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            This dApp demonstrates real blockchain interactions with a Simple Storage contract.
-            Connect your wallet to read and write values on the blockchain.
+            This dApp demonstrates real blockchain interactions with a Simple
+            Storage contract. Connect your wallet to read and write values on
+            the blockchain.
           </p>
           <div className="mt-4 text-sm text-gray-500 font-mono bg-gray-100 rounded-lg p-2 inline-block">
             Contract: {SIMPLE_STORAGE_CONTRACT_ADDRESS}
@@ -338,7 +393,9 @@ function WrapSellApp() {
                   <div className="text-center p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-100">
                     <div className="flex items-center justify-center mb-3">
                       <RefreshCw className="w-6 h-6 text-green-600 mr-2 animate-spin" />
-                      <span className="font-semibold text-green-800">Redirecting to Dashboard...</span>
+                      <span className="font-semibold text-green-800">
+                        Redirecting to Dashboard...
+                      </span>
                     </div>
                     <p className="text-sm text-gray-600">
                       Please wait while we redirect you to your dashboard.
@@ -350,7 +407,9 @@ function WrapSellApp() {
                     <div className="text-center p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-100">
                       <div className="flex items-center justify-center mb-3">
                         <Wallet className="w-6 h-6 text-green-600 mr-2" />
-                        <span className="font-semibold text-green-800">Wallet Connected</span>
+                        <span className="font-semibold text-green-800">
+                          Wallet Connected
+                        </span>
                       </div>
                       <p className="text-sm text-gray-600 font-mono break-all">
                         {address}
@@ -365,18 +424,25 @@ function WrapSellApp() {
                           className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
                           disabled={isReading}
                         >
-                          <RefreshCw className={`w-5 h-5 ${isReading ? 'animate-spin' : ''}`} />
+                          <RefreshCw
+                            className={`w-5 h-5 ${
+                              isReading ? "animate-spin" : ""
+                            }`}
+                          />
                           <span>{isReading ? "Reading..." : "Read Value"}</span>
                         </button>
-                        
-                        {contractValue !== undefined && contractValue !== null && (
-                          <div className="text-center">
-                            <p className="text-sm text-gray-500 mb-1">Current Value</p>
-                            <p className="text-2xl font-bold text-green-600">
-                              {contractValue.toString()}
-                            </p>
-                          </div>
-                        )}
+
+                        {contractValue !== undefined &&
+                          contractValue !== null && (
+                            <div className="text-center">
+                              <p className="text-sm text-gray-500 mb-1">
+                                Current Value
+                              </p>
+                              <p className="text-2xl font-bold text-green-600">
+                                {contractValue.toString()}
+                              </p>
+                            </div>
+                          )}
                       </div>
                     </div>
 
@@ -396,11 +462,17 @@ function WrapSellApp() {
                         className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
                         disabled={isWriting || isConfirming}
                       >
-                        <Database className={`w-5 h-5 ${(isWriting || isConfirming) ? 'animate-pulse' : ''}`} />
+                        <Database
+                          className={`w-5 h-5 ${
+                            isWriting || isConfirming ? "animate-pulse" : ""
+                          }`}
+                        />
                         <span>
-                          {isWriting ? "Sending Transaction..." : 
-                           isConfirming ? "Confirming..." : 
-                           "Write Value"}
+                          {isWriting
+                            ? "Sending Transaction..."
+                            : isConfirming
+                            ? "Confirming..."
+                            : "Write Value"}
                         </span>
                       </button>
                     </div>
@@ -424,7 +496,8 @@ function WrapSellApp() {
                     Connect Your Wallet
                   </h3>
                   <p className="text-gray-500 mb-6">
-                    Connect your wallet to start interacting with the smart contract
+                    Connect your wallet to start interacting with the smart
+                    contract
                   </p>
                   <button
                     onClick={handleConnect}
@@ -444,17 +517,25 @@ function WrapSellApp() {
           <div className="text-center p-6 bg-white rounded-2xl shadow-lg">
             <Database className="w-12 h-12 text-blue-500 mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">TCG Marketplace</h3>
-            <p className="text-gray-600">Buy, sell, and discover your favorite TCG cards</p>
+            <p className="text-gray-600">
+              Buy, sell, and discover your favorite TCG cards
+            </p>
           </div>
           <div className="text-center p-6 bg-white rounded-2xl shadow-lg">
             <Zap className="w-12 h-12 text-purple-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Secure Crypto Payments</h3>
-            <p className="text-gray-600">Use crypto to buy and sell cards safely and securely</p>
+            <h3 className="text-xl font-semibold mb-2">
+              Secure Crypto Payments
+            </h3>
+            <p className="text-gray-600">
+              Use crypto to buy and sell cards safely and securely
+            </p>
           </div>
           <div className="text-center p-6 bg-white rounded-2xl shadow-lg">
             <Wallet className="w-12 h-12 text-green-500 mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Easy Connection</h3>
-            <p className="text-gray-600">Connect your wallet and start trading TCG cards</p>
+            <p className="text-gray-600">
+              Connect your wallet and start trading TCG cards
+            </p>
           </div>
         </div>
       </main>

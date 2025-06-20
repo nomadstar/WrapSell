@@ -4,3 +4,4 @@ ganache/build
 node_modules
 venv/
 __pycache__/
+backend_local/__pycache__/extraer.cpython-313.pyc
