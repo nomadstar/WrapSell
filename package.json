@@ -1,10 +1,11 @@
 {
-  "name": "wrapsell",
+  "name": "wrapsell-root",
   "version": "1.0.0",
   "description": "Este repositorio sirve como base para proyectos de hackathon web3, desarrollado para el ramo BLOCKCHAIN Y ALGORITMOS DESCENTRALIZADOS (CIT3358_CA01) de la Universidad Diego Portales.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "heroku-postbuild": "cd frontend && npm install && npm run build"
   },
   "repository": {
     "type": "git",
@@ -24,5 +25,6 @@
     "@web3modal/ethers5": "^5.1.11",
     "ethers": "^5.8.0",
     "framer-motion": "^12.18.1"
-  }
+  },
+  "private": true
 }
