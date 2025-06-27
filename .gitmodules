@@ -1,0 +1,3 @@
+[submodule "wrap-frontend"]
+	path = wrap-frontend
+	url = https://github.com/{tu_usuario}/wrap-frontend.git
