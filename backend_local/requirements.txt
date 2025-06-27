@@ -1,6 +1,0 @@
-requests
-beautifulsoup4
-psycopg2
-opencv-python
-psycopg2
-flask
