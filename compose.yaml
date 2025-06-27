@@ -48,7 +48,7 @@ services:
     stdin_open: true
     command: npm run start
     volumes:
-      - ./frontend:/app
+      - ./wrap-frontend:/app
     ports:
       - "3000:3000"
     #environment:
