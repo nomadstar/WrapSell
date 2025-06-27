@@ -26,7 +26,7 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./backend_local:/app
+      - ./wrap-backend/wrap-backend:/app
     command: /bin/bash -c "pip install -r requirements.txt && python3 app.py"
 
 
@@ -46,9 +46,9 @@ services:
     container_name: nextjs_app
     working_dir: /app
     stdin_open: true
-    command: npm run start
+    command: sh -c "npm install && npm run dev"
     volumes:
-      - ./wrap-frontend:/app
+      - ./wrap-frontend/wrap-frontend:/app
     ports:
       - "3000:3000"
     #environment:
