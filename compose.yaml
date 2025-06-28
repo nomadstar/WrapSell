@@ -26,7 +26,7 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./wrap-backend/wrap-backend:/app
+      - ./wrap-backend:/app
     command: /bin/bash -c "pip install -r requirements.txt && python3 app.py"
 
 
