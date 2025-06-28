@@ -1,4 +1,3 @@
-
 services:
   # ganache:
   #   build:
@@ -29,7 +28,6 @@ services:
       - ./wrap-backend:/app
     command: /bin/bash -c "pip install -r requirements.txt && python3 app.py"
 
-
   db:
     image: postgres:latest
     container_name: postgres_db
@@ -51,8 +49,10 @@ services:
       - ./wrap-frontend/wrap-frontend:/app
     ports:
       - "3000:3000"
-    #environment:
-    #  - NODE_ENV=production
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - WATCHPACK_POLL_INTERVAL=1000
   # Uncomment if you want to use a local .env file
   # env_file:
   #   - ./frontend/.env
