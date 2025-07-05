@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.26;
-
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+pragma solidity ^0.8.19;
 
 contract WrapSell {
-    using SafeERC20 for IERC20;
-
     // ERC20 Basic Variables
     string public constant name = "WrapSell Stablecoin";
     string public constant symbol = "WSC";
@@ -20,9 +15,6 @@ contract WrapSell {
     mapping(address => uint256) private _balances;
     mapping(address => mapping(address => uint256)) private _allowances;
     
-    // External stablecoin for deposits/withdrawals
-    IERC20 public immutable underlyingToken;
-    
     // Deposit/withdrawal tracking
     mapping(address => uint256) public depositBalances;
     uint256 public totalDeposited;
@@ -31,23 +23,48 @@ contract WrapSell {
     // Fee system
     uint256 public feePercent;
     
+    // Pool management
+    address[] public pools;
+    mapping(address => bool) public isPool;
+    
     // Events
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
     event Deposit(address indexed user, uint256 amount);
     event Withdrawal(address indexed user, uint256 amount);
+    event PoolAdded(address indexed pool);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner can call this function");
         _;
     }
 
-    constructor(address _underlyingToken) {
+    constructor() {
         owner = msg.sender;
-        underlyingToken = IERC20(_underlyingToken);
         feePercent = 0;
         totalDeposited = 0;
         totalWithdrawn = 0;
+    }
+
+    // --- Pool Management Functions ---
+    
+    function addPool(address poolAddress) external onlyOwner {
+        require(poolAddress != address(0), "Invalid pool address");
+        require(!isPool[poolAddress], "Pool already exists");
+        
+        pools.push(poolAddress);
+        isPool[poolAddress] = true;
+        
+        emit PoolAdded(poolAddress);
+    }
+    
+    function getPoolCount() external view returns (uint256) {
+        return pools.length;
+    }
+    
+    function getPool(uint256 index) external view returns (address) {
+        require(index < pools.length, "Pool index out of bounds");
+        return pools[index];
     }
 
     // --- ERC20 Functions ---
@@ -100,10 +117,9 @@ contract WrapSell {
         emit Transfer(msg.sender, address(0), amount);
     }
 
-    function deposit(uint256 amount) external {
+    function deposit(uint256 amount) external payable {
         require(amount > 0, "Amount must be greater than 0");
-        
-        underlyingToken.safeTransferFrom(msg.sender, address(this), amount);
+        require(msg.value >= amount, "Insufficient ETH sent");
         
         // Mint 1:1 ratio of stablecoins
         totalSupply += amount;
@@ -126,8 +142,8 @@ contract WrapSell {
         depositBalances[msg.sender] -= amount;
         totalWithdrawn += amount;
         
-        // Transfer underlying tokens back
-        underlyingToken.safeTransfer(msg.sender, amount);
+        // Transfer ETH back
+        payable(msg.sender).transfer(amount);
         
         emit Transfer(msg.sender, address(0), amount);
         emit Withdrawal(msg.sender, amount);
@@ -162,13 +178,13 @@ contract WrapSell {
     }
 
     function emergencyWithdraw(uint256 amount) external onlyOwner {
-        underlyingToken.safeTransfer(owner, amount);
+        payable(owner).transfer(amount);
     }
 
     // --- View Functions ---
 
     function getContractBalance() external view returns (uint256) {
-        return underlyingToken.balanceOf(address(this));
+        return address(this).balance;
     }
 
     function getUserDepositBalance(address user) external view returns (uint256) {
