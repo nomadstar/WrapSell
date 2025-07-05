@@ -7,7 +7,7 @@ require("@nomicfoundation/hardhat-verify");
 const defaultPrivateKey = "0x0000000000000000000000000000000000000000000000000000000000000001";
 
 module.exports = {
-  solidity: "0.8.26",
+  solidity: "0.8.20",
   networks: {
     hardhat: {
       // Red local de Hardhat para testing

@@ -10,6 +10,9 @@
     },
     "[dockerfile]": {
       "editor.defaultFormatter": "ms-azuretools.vscode-containers"
+    },
+    "[solidity]": {
+      "editor.defaultFormatter": "AckeeBlockchain.tools-for-solidity"
     }
   }
   
