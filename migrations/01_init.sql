@@ -29,3 +29,10 @@ CREATE TABLE IF NOT EXISTS transactions (
     commission DECIMAL(8,2) DEFAULT 0,
     transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+-- Crear tabla pool que contenga cartas
+CREATE TABLE IF NOT EXISTS pool (
+    id SERIAL PRIMARY KEY,
+    card_id INTEGER NOT NULL REFERENCES cards(id),
+    added_by VARCHAR(42) NOT NULL REFERENCES users(wallet_address),
+    added_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
