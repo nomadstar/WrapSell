@@ -1,117 +1,67 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-// If you have OpenZeppelin installed locally via npm, use this path:
 import "../node_modules/@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "../node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-interface IStablecoin {
-    function transfer(address recipient, uint256 amount) external returns (bool);
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
-    function balanceOf(address account) external view returns (uint256);
-    function approve(address spender, uint256 amount) external returns (bool);
-}
+contract WrapSell {
+    using SafeERC20 for IERC20;
 
-// Estructura para la información de cada carta
-struct Card {
-    string name;
-    string number;
-    string edition;
-    uint256 price;
-    string url;
-}
-// Lista de direcciones autorizadas para agregar cartas
-contract Wrapsell is IStablecoin {
-    using SafeERC20 for IStablecoin;
+    // ERC20 Basic Variables
+    string public constant name = "WrapSell Stablecoin";
+    string public constant symbol = "WSC";
+    uint8 public constant decimals = 18;
+    uint256 public totalSupply;
+    
+    // Owner and permissions
+    address public owner;
+    
+    // Balances and allowances
+    mapping(address => uint256) private _balances;
+    mapping(address => mapping(address => uint256)) private _allowances;
+    
+    // External stablecoin for deposits/withdrawals
+    IERC20 public immutable underlyingToken;
+    
+    // Deposit/withdrawal tracking
+    mapping(address => uint256) public depositBalances;
+    uint256 public totalDeposited;
+    uint256 public totalWithdrawn;
+    
+    // Fee system
+    uint256 public feePercent;
+    
+    // Events
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+    event Deposit(address indexed user, uint256 amount);
+    event Withdrawal(address indexed user, uint256 amount);
 
-    // Only owner modifier moved inside the contract
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner can call this function");
         _;
     }
 
-    // Modificación: require mínimo 4 cartas para crear la pool
-    modifier requireMinCards(Card[] memory _cards) {
-        require(_cards.length >= 4, "At least 4 cards required to create the pool");
-        _;
-    }
-    // Permite al owner autorizar o desautorizar direcciones para agregar cartas
-    function setAllowedToAddCards(address account, bool allowed) external {
-        require(msg.sender == owner, "Only owner can set allowed addresses");
-        allowedToAddCards[account] = allowed;
-    }
-
-    function addCard(
-        string memory cardName,
-        string memory number,
-        string memory edition,
-        uint256 price,
-        string memory url
-    ) external onlyOwner {
-        cards.push(Card(cardName, number, edition, price, url));
-        // Actualizar el máximo minteable si se desea que refleje el nuevo valor total
-        maxMintable += price / 4;
-    }
-
-    // Permite al owner eliminar una carta por índice, pero no si quedan solo 4 cartas
-    function removeCard(uint256 index) external onlyOwner requireMinCards {
-        require(index < cards.length, "Card does not exist");
-        maxMintable -= cards[index].price / 4;
-        cards[index] = cards[cards.length - 1];
-        cards.pop();
-    }
-
-    // Permite al owner autorizar o desautorizar direcciones para agregar cartas
-    mapping(address => bool) public allowedToAddCards;
-    function setAllowedToAddCards(address account, bool allowed) external onlyOwner {
-        allowedToAddCards[account] = allowed;
-    }
-
-    function addCard(
-        string memory cardName,
-        string memory number,
-        string memory edition,
-        uint256 price,
-        string memory url
-    ) external onlyOwner {
-        cards.push(Card(cardName, number, edition, price, url));
-        // Actualizar el máximo minteable si se desea que refleje el nuevo valor total
-        maxMintable += price / 4;
-    }
-    IStablecoin public stablecoin;
-    event Approval(address indexed owner, address indexed spender, uint256 value);
-
-    constructor(
-        address _stablecoin,
-        Card[] memory _cards
-    ) {
-        stablecoin = IStablecoin(_stablecoin);
+    constructor(address _underlyingToken) {
         owner = msg.sender;
+        underlyingToken = IERC20(_underlyingToken);
         feePercent = 0;
         totalDeposited = 0;
         totalWithdrawn = 0;
-
-        uint256 totalValue = 0;
-        // Copiar las cartas a la colección y calcular el valor total
-        for (uint256 i = 0; i < _cards.length; i++) {
-            cards.push(_cards[i]);
-            totalValue += _cards[i].price;
-        }
-        // El máximo minteable es 1/4 del valor total de las cartas
-        maxMintable = totalValue / 4;
     }
 
-    // --- Stablecoin functions ---
+    // --- ERC20 Functions ---
 
-    function balanceOf(address account) public view override returns (uint256) {
-        return _stableBalances[account];
+    function balanceOf(address account) public view returns (uint256) {
+        return _balances[account];
     }
 
-    function transfer(address recipient, uint256 amount) public override returns (bool) {
-        _transfer(msg.sender, recipient, amount);
+    function transfer(address to, uint256 amount) public returns (bool) {
+        _transfer(msg.sender, to, amount);
         return true;
     }
 
-    function approve(address spender, uint256 amount) public override returns (bool) {
+    function approve(address spender, uint256 amount) public returns (bool) {
         _approve(msg.sender, spender, amount);
         return true;
     }
@@ -120,71 +70,108 @@ contract Wrapsell is IStablecoin {
         return _allowances[owner_][spender];
     }
 
-    function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
-        uint256 currentAllowance = _allowances[sender][msg.sender];
+    function transferFrom(address from, address to, uint256 amount) public returns (bool) {
+        uint256 currentAllowance = _allowances[from][msg.sender];
         require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
-        _transfer(sender, recipient, amount);
-        _approve(sender, msg.sender, currentAllowance - amount);
+        
+        _transfer(from, to, amount);
+        _approve(from, msg.sender, currentAllowance - amount);
+        
         return true;
     }
 
-    function mint(address to, uint256 amount) public {
-        require(msg.sender == owner, "Only owner can mint");
-        require(totalSupply + amount <= maxMintable, "Exceeds max mintable");
+    // --- Stablecoin Specific Functions ---
+
+    function mint(address to, uint256 amount) public onlyOwner {
+        require(to != address(0), "ERC20: mint to the zero address");
+        
         totalSupply += amount;
-        _stableBalances[to] += amount;
+        _balances[to] += amount;
+        
         emit Transfer(address(0), to, amount);
     }
 
     function burn(uint256 amount) public {
-        require(_stableBalances[msg.sender] >= amount, "Insufficient balance");
+        require(_balances[msg.sender] >= amount, "ERC20: burn amount exceeds balance");
+        
         totalSupply -= amount;
-        _stableBalances[msg.sender] -= amount;
+        _balances[msg.sender] -= amount;
+        
         emit Transfer(msg.sender, address(0), amount);
     }
 
+    function deposit(uint256 amount) external {
+        require(amount > 0, "Amount must be greater than 0");
+        
+        underlyingToken.safeTransferFrom(msg.sender, address(this), amount);
+        
+        // Mint 1:1 ratio of stablecoins
+        totalSupply += amount;
+        _balances[msg.sender] += amount;
+        depositBalances[msg.sender] += amount;
+        totalDeposited += amount;
+        
+        emit Transfer(address(0), msg.sender, amount);
+        emit Deposit(msg.sender, amount);
+    }
+
+    function withdraw(uint256 amount) external {
+        require(amount > 0, "Amount must be greater than 0");
+        require(_balances[msg.sender] >= amount, "Insufficient balance");
+        require(depositBalances[msg.sender] >= amount, "Insufficient deposit balance");
+        
+        // Burn the stablecoins
+        totalSupply -= amount;
+        _balances[msg.sender] -= amount;
+        depositBalances[msg.sender] -= amount;
+        totalWithdrawn += amount;
+        
+        // Transfer underlying tokens back
+        underlyingToken.safeTransfer(msg.sender, amount);
+        
+        emit Transfer(msg.sender, address(0), amount);
+        emit Withdrawal(msg.sender, amount);
+    }
+
+    // --- Internal Functions ---
+
     function _transfer(address from, address to, uint256 amount) internal {
-        require(from != address(0) && to != address(0), "Zero address");
-        require(_stableBalances[from] >= amount, "Insufficient balance");
-        _stableBalances[from] -= amount;
-        _stableBalances[to] += amount;
+        require(from != address(0), "ERC20: transfer from the zero address");
+        require(to != address(0), "ERC20: transfer to the zero address");
+        require(_balances[from] >= amount, "ERC20: transfer amount exceeds balance");
+
+        _balances[from] -= amount;
+        _balances[to] += amount;
+        
         emit Transfer(from, to, amount);
     }
 
     function _approve(address owner_, address spender, uint256 amount) internal {
-        require(owner_ != address(0) && spender != address(0), "Zero address");
+        require(owner_ != address(0), "ERC20: approve from the zero address");
+        require(spender != address(0), "ERC20: approve to the zero address");
+
         _allowances[owner_][spender] = amount;
         emit Approval(owner_, spender, amount);
     }
 
-    function deposit(uint256 amount) external {
-        SafeERC20.safeTransferFrom(IERC20(address(stablecoin)), msg.sender, address(this), amount);
-        balances[msg.sender] += amount;
-        totalDeposited += amount;
+    // --- Admin Functions ---
+
+    function setFeePercent(uint256 newFeePercent) external onlyOwner {
+        require(newFeePercent <= 1000, "Fee cannot exceed 10%"); // Max 10%
+        feePercent = newFeePercent;
     }
 
-    function withdraw(uint256 amount) external {
-        require(balances[msg.sender] >= amount, "Insufficient balance");
-        balances[msg.sender] -= amount;
-        require(stablecoin.transfer(msg.sender, amount), "Transfer failed");
-        totalWithdrawn += amount;
+    function emergencyWithdraw(uint256 amount) external onlyOwner {
+        underlyingToken.safeTransfer(owner, amount);
     }
 
-    // Obtener el número total de cartas en la colección
-    function getCardsCount() external view returns (uint256) {
-        return cards.length;
+    // --- View Functions ---
+
+    function getContractBalance() external view returns (uint256) {
+        return underlyingToken.balanceOf(address(this));
     }
 
-    // Obtener información de una carta específica
-    function getCard(uint256 index) external view returns (
-        string memory cardName,
-        string memory number,
-        string memory edition,
-        uint256 price,
-        string memory url
-    ) {
-        require(index < cards.length, "Card does not exist");
-        Card storage card = cards[index];
-        return (card.name, card.number, card.edition, card.price, card.url);
+    function getUserDepositBalance(address user) external view returns (uint256) {
+        return depositBalances[user];
     }
 }

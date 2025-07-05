@@ -1,143 +1,126 @@
-/*
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./WrapSell.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title WrapPool
- * @dev Stablecoin backed by NFTs from multiple WrapSell contracts associated to a single owner.
+ * @dev Stablecoin backed by collateral assets (USDC, USDT, etc.)
  */
 contract WrapPool is ERC20, Ownable {
-    // List of associated WrapSell contracts
-    WrapSell[] public wrapSellContracts;
-    // Owner of all associated WrapSell contracts
-    address public nftOwner;
-
-    // Mapping to track which NFTs are deposited (contract => tokenId => deposited)
-    mapping(address => mapping(uint256 => bool)) public depositedNFTs;
-
-    event WrapSellAdded(address indexed contractAddress);
-    event NFTDeposited(address indexed wrapSell, uint256 indexed tokenId, address indexed from);
-    event NFTWithdrawn(address indexed wrapSell, uint256 indexed tokenId, address indexed to);
-
-    constructor(address _nftOwner) ERC20("NFT Stablecoin", "NFTUSD") Ownable(_nftOwner) {
-        nftOwner = _nftOwner;
-    }
-
-    modifier onlyNFTOwner() {
-        require(msg.sender == nftOwner, "Not NFT owner");
-        _;
-    }
-
-    function addWrapSellContract(address wrapSellAddress) external onlyOwner {
-        require(wrapSellAddress != address(0), "Invalid address");
-        WrapSell ws = WrapSell(wrapSellAddress);
-        require(ws.getOwner() == nftOwner, "WrapSell not owned by pool owner");
-        wrapSellContracts.push(ws);
-        emit WrapSellAdded(wrapSellAddress);
-    }
-
-    function getWrapSellContracts() external view returns (address[] memory) {
-        address[] memory addresses = new address[](wrapSellContracts.length);
-        for (uint i = 0; i < wrapSellContracts.length; i++) {
-            addresses[i] = address(wrapSellContracts[i]);
-        }
-        return addresses;
-    }
-
-    /**
-     * @dev Deposit an NFT from an associated WrapSell contract and mint stablecoins.
-     * @param wrapSellIndex Index of the WrapSell contract in the list.
-     * @param tokenId NFT tokenId to deposit.
-     * @param amount Amount of stablecoin to mint (could be based on NFT value).
-     */
-    function depositNFT(uint256 wrapSellIndex, uint256 tokenId, uint256 amount) external onlyNFTOwner {
-        require(wrapSellIndex < wrapSellContracts.length, "Invalid index");
-        WrapSell ws = wrapSellContracts[wrapSellIndex];
-        require(ws.ownerOf(tokenId) == msg.sender, "Not NFT owner");
-        // Transfer NFT to this contract
-        ws.safeTransferFrom(msg.sender, address(this), tokenId);
-        depositedNFTs[address(ws)][tokenId] = true;
-        _mint(msg.sender, amount);
-        emit NFTDeposited(address(ws), tokenId, msg.sender);
-    }
-
-    /**
-     * @dev Withdraw an NFT by burning stablecoins.
-     * @param wrapSellIndex Index of the WrapSell contract in the list.
-     * @param tokenId NFT tokenId to withdraw.
-     * @param amount Amount of stablecoin to burn (should match deposit).
-     */
-    function withdrawNFT(uint256 wrapSellIndex, uint256 tokenId, uint256 amount) external onlyNFTOwner {
-        require(wrapSellIndex < wrapSellContracts.length, "Invalid index");
-        WrapSell ws = wrapSellContracts[wrapSellIndex];
-        require(depositedNFTs[address(ws)][tokenId], "NFT not deposited");
-        _burn(msg.sender, amount);
-        ws.safeTransferFrom(address(this), msg.sender, tokenId);
-        depositedNFTs[address(ws)][tokenId] = false;
-        emit NFTWithdrawn(address(ws), tokenId, msg.sender);
-    }
-
-    // Optional: function to get all deposited NFTs for a WrapSell contract
-    function isNFTDeposited(address wrapSell, uint256 tokenId) external view returns (bool) {
-        return depositedNFTs[wrapSell][tokenId];
-    }
-    // Mapping to track which address owns which NFTs (wrapSell contract => tokenId => owner)
-    mapping(address => mapping(uint256 => address)) public nftCurrentOwner;
-
-    // Mapping to track all holders of NFTs (for enumeration)
-    mapping(address => address[]) public nftHolders; // wrapSell contract => array of holders
-    mapping(address => mapping(address => bool)) private isHolder; // wrapSell contract => holder => exists
-
-    event NFTOwnershipUpdated(address indexed wrapSell, uint256 indexed tokenId, address indexed newOwner);
-
-    // Internal function to update NFT ownership tracking
-    function _updateNFTOwnership(address wrapSell, uint256 tokenId, address newOwner) internal {
-        address prevOwner = nftCurrentOwner[wrapSell][tokenId];
-        nftCurrentOwner[wrapSell][tokenId] = newOwner;
-        if (newOwner != address(0) && !isHolder[wrapSell][newOwner]) {
-            nftHolders[wrapSell].push(newOwner);
-            isHolder[wrapSell][newOwner] = true;
-        }
-        emit NFTOwnershipUpdated(wrapSell, tokenId, newOwner);
-    }
-
-    // Override depositNFT to update ownership
-    function depositNFT(uint256 wrapSellIndex, uint256 tokenId, uint256 amount) external onlyNFTOwner {
-        require(wrapSellIndex < wrapSellContracts.length, "Invalid index");
-        WrapSell ws = wrapSellContracts[wrapSellIndex];
-        require(ws.ownerOf(tokenId) == msg.sender, "Not NFT owner");
-        ws.safeTransferFrom(msg.sender, address(this), tokenId);
-        depositedNFTs[address(ws)][tokenId] = true;
-        _mint(msg.sender, amount);
-        _updateNFTOwnership(address(ws), tokenId, msg.sender);
-        emit NFTDeposited(address(ws), tokenId, msg.sender);
-    }
-
-    // Override withdrawNFT to update ownership
-    function withdrawNFT(uint256 wrapSellIndex, uint256 tokenId, uint256 amount) external onlyNFTOwner {
-        require(wrapSellIndex < wrapSellContracts.length, "Invalid index");
-        WrapSell ws = wrapSellContracts[wrapSellIndex];
-        require(depositedNFTs[address(ws)][tokenId], "NFT not deposited");
-        _burn(msg.sender, amount);
-        ws.safeTransferFrom(address(this), msg.sender, tokenId);
-        depositedNFTs[address(ws)][tokenId] = false;
-        _updateNFTOwnership(address(ws), tokenId, msg.sender);
-        emit NFTWithdrawn(address(ws), tokenId, msg.sender);
-    }
-
-    // View function to get the current owner of a specific NFT
-    function getNFTOwner(address wrapSell, uint256 tokenId) external view returns (address) {
-        return nftCurrentOwner[wrapSell][tokenId];
-    }
-
-    // View function to get all holders for a WrapSell contract
-    function getNFTHolders(address wrapSell) external view returns (address[] memory) {
-        return nftHolders[wrapSell];
-    }
-
+    // Mapping of allowed collateral tokens
+    mapping(address => bool) public allowedCollateral;
+    mapping(address => uint256) public collateralBalances;
     
+    // Price feeds or fixed rate (1:1 for stablecoins)
+    mapping(address => uint256) public collateralRates; // Rate in wei (1e18 = 1:1)
+    
+    uint256 public constant RATE_PRECISION = 1e18;
+    
+    event CollateralAdded(address indexed token);
+    event CollateralRemoved(address indexed token);
+    event CollateralDeposited(address indexed user, address indexed token, uint256 amount, uint256 minted);
+    event CollateralWithdrawn(address indexed user, address indexed token, uint256 amount, uint256 burned);
+
+    constructor() ERC20("Wrap Stablecoin", "WUSD") Ownable(msg.sender) {
+        // Initialize with common stablecoins at 1:1 rate
+        // These addresses would need to be updated for the specific network
+    }
+
+    /**
+     * @dev Add a collateral token with its exchange rate
+     * @param token Address of the collateral token
+     * @param rate Exchange rate (1e18 = 1:1 ratio)
+     */
+    function addCollateral(address token, uint256 rate) external onlyOwner {
+        require(token != address(0), "Invalid token address");
+        require(rate > 0, "Invalid rate");
+        allowedCollateral[token] = true;
+        collateralRates[token] = rate;
+        emit CollateralAdded(token);
+    }
+
+    /**
+     * @dev Remove a collateral token
+     * @param token Address of the collateral token to remove
+     */
+    function removeCollateral(address token) external onlyOwner {
+        allowedCollateral[token] = false;
+        emit CollateralRemoved(token);
+    }
+
+    /**
+     * @dev Deposit collateral and mint stablecoins
+     * @param token Address of the collateral token
+     * @param amount Amount of collateral to deposit
+     */
+    function deposit(address token, uint256 amount) external {
+        require(allowedCollateral[token], "Collateral not allowed");
+        require(amount > 0, "Amount must be greater than 0");
+        
+        IERC20 collateralToken = IERC20(token);
+        require(collateralToken.transferFrom(msg.sender, address(this), amount), "Transfer failed");
+        
+        // Calculate amount to mint based on collateral rate
+        uint256 mintAmount = (amount * collateralRates[token]) / RATE_PRECISION;
+        
+        collateralBalances[token] += amount;
+        _mint(msg.sender, mintAmount);
+        
+        emit CollateralDeposited(msg.sender, token, amount, mintAmount);
+    }
+
+    /**
+     * @dev Burn stablecoins and withdraw collateral
+     * @param token Address of the collateral token to withdraw
+     * @param burnAmount Amount of stablecoins to burn
+     */
+    function withdraw(address token, uint256 burnAmount) external {
+        require(allowedCollateral[token], "Collateral not allowed");
+        require(burnAmount > 0, "Amount must be greater than 0");
+        require(balanceOf(msg.sender) >= burnAmount, "Insufficient balance");
+        
+        // Calculate collateral amount to return
+        uint256 collateralAmount = (burnAmount * RATE_PRECISION) / collateralRates[token];
+        require(collateralBalances[token] >= collateralAmount, "Insufficient collateral");
+        
+        _burn(msg.sender, burnAmount);
+        collateralBalances[token] -= collateralAmount;
+        
+        IERC20 collateralToken = IERC20(token);
+        require(collateralToken.transfer(msg.sender, collateralAmount), "Transfer failed");
+        
+        emit CollateralWithdrawn(msg.sender, token, collateralAmount, burnAmount);
+    }
+
+    /**
+     * @dev Get the total value of all collateral in the pool
+     */
+    function getTotalCollateralValue() external view returns (uint256 totalValue) {
+        // This would need to iterate through all collateral tokens
+        // Implementation depends on how you want to track all collateral types
+    }
+
+    /**
+     * @dev Get collateral balance for a specific token
+     */
+    function getCollateralBalance(address token) external view returns (uint256) {
+        return collateralBalances[token];
+    }
+
+    /**
+     * @dev Check if a token is allowed as collateral
+     */
+    function isCollateralAllowed(address token) external view returns (bool) {
+        return allowedCollateral[token];
+    }
+
+    /**
+     * @dev Get the exchange rate for a collateral token
+     */
+    function getCollateralRate(address token) external view returns (uint256) {
+        return collateralRates[token];
+    }
 }
