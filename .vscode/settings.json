@@ -13,6 +13,9 @@
     },
     "[solidity]": {
       "editor.defaultFormatter": "AckeeBlockchain.tools-for-solidity"
+    },
+    "[typescriptreact]": {
+      "editor.defaultFormatter": "vscode.typescript-language-features"
     }
   }
   
