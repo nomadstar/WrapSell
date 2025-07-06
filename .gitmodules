@@ -1,6 +1,6 @@
 [submodule "wrap-backend"]
 	path = wrap-backend
-	url = https://github.com/nomadstar/wrap-backend.git
+	url = https://github.com/nomadstar/wrap-backend
 [submodule "wrap-frontend"]
 	path = wrap-frontend
 	url = https://github.com/nomadstar/wrap-frontend
